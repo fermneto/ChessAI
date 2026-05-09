@@ -11,21 +11,24 @@ interface Props {
   lastMove?: string | null;
   legalMoves?: string[];
   checkSquare?: string | null;
+  arrows?: { from: string, to: string, color?: string }[];
+  manualArrows?: { from: string, to: string, color?: string }[];
+  onManualArrowsChange?: (arrows: any[]) => void;
 }
 
 const PIECE_IMAGES: Record<string, string> = {
-  'p': 'https://upload.wikimedia.org/wikipedia/commons/c/c7/Chess_pdt45.svg',
-  'r': 'https://upload.wikimedia.org/wikipedia/commons/f/ff/Chess_rdt45.svg',
-  'n': 'https://upload.wikimedia.org/wikipedia/commons/e/ef/Chess_ndt45.svg',
-  'b': 'https://upload.wikimedia.org/wikipedia/commons/9/98/Chess_bdt45.svg',
-  'q': 'https://upload.wikimedia.org/wikipedia/commons/4/47/Chess_qdt45.svg',
-  'k': 'https://upload.wikimedia.org/wikipedia/commons/f/f0/Chess_kdt45.svg',
-  'P': 'https://upload.wikimedia.org/wikipedia/commons/4/45/Chess_plt45.svg',
-  'R': 'https://upload.wikimedia.org/wikipedia/commons/7/72/Chess_rlt45.svg',
-  'N': 'https://upload.wikimedia.org/wikipedia/commons/7/70/Chess_nlt45.svg',
-  'B': 'https://upload.wikimedia.org/wikipedia/commons/b/b1/Chess_blt45.svg',
-  'Q': 'https://upload.wikimedia.org/wikipedia/commons/1/15/Chess_qlt45.svg',
-  'K': 'https://upload.wikimedia.org/wikipedia/commons/4/42/Chess_klt45.svg',
+  'p': '/pieces/bP.png',
+  'r': '/pieces/bR.png',
+  'n': '/pieces/bN.png',
+  'b': '/pieces/bB.png',
+  'q': '/pieces/bQ.png',
+  'k': '/pieces/bK.png',
+  'P': '/pieces/wP.png',
+  'R': '/pieces/wR.png',
+  'N': '/pieces/wN.png',
+  'B': '/pieces/wB.png',
+  'Q': '/pieces/wQ.png',
+  'K': '/pieces/wK.png',
 };
 
 export default function CustomChessBoard({ 
@@ -35,8 +38,12 @@ export default function CustomChessBoard({
   selectedSquare,
   lastMove,
   legalMoves = [],
-  checkSquare = null
+  checkSquare = null,
+  arrows = [],
+  manualArrows = [],
+  onManualArrowsChange
 }: Props) {
+  const [rightClickStart, setRightClickStart] = useState<string | null>(null);
   
   const board = useMemo(() => {
     const rows = position.split(' ')[0].split('/');
@@ -57,6 +64,40 @@ export default function CustomChessBoard({
     }
     return fullBoard;
   }, [position]);
+
+  const handleMouseDown = (square: string, e: React.MouseEvent) => {
+    if (e.button === 2) { // Botão direito
+      setRightClickStart(square);
+    }
+  };
+
+  const handleMouseUp = (square: string, e: React.MouseEvent) => {
+    if (e.button === 2 && rightClickStart && onManualArrowsChange) {
+      const from = rightClickStart;
+      const to = square;
+      
+      const newArrow = { 
+        from, 
+        to, 
+        color: 'rgba(251, 191, 36, 0.8)' // Amarelo/Laranja premium
+      };
+
+      // Verificar se a seta já existe (toggle)
+      const exists = manualArrows.find(a => a.from === from && a.to === to);
+      
+      if (exists) {
+        onManualArrowsChange(manualArrows.filter(a => a.from !== from || a.to !== to));
+      } else {
+        onManualArrowsChange([...manualArrows, newArrow]);
+      }
+      
+      setRightClickStart(null);
+    }
+  };
+
+  const handleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+  };
 
   const squares = useMemo(() => {
     const res = [];
@@ -141,18 +182,40 @@ export default function CustomChessBoard({
     return { floatingPieces: nextPieces, newPieceMap: currentMap };
   }, [board, boardOrientation, lastMove]);
 
+  const getSquareVisualCoord = (sqName: string) => {
+    const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+    const ranks = ['8', '7', '6', '5', '4', '3', '2', '1'];
+    
+    const fileIdx = files.indexOf(sqName[0]);
+    const rankIdx = ranks.indexOf(sqName[1]);
+    
+    const visualRow = boardOrientation === 'white' ? rankIdx : 7 - rankIdx;
+    const visualCol = boardOrientation === 'white' ? fileIdx : 7 - fileIdx;
+
+    return {
+      x: visualCol * 12.5 + 6.25,
+      y: visualRow * 12.5 + 6.25
+    };
+  };
+
   return (
-    <div className="w-full aspect-square relative border-[6px] border-neutral-800 rounded-lg shadow-2xl overflow-hidden bg-neutral-900 select-none">
+    <div 
+      onContextMenu={handleContextMenu}
+      className="w-full aspect-square relative border-[6px] border-neutral-800 rounded-lg shadow-2xl overflow-hidden bg-neutral-900 select-none"
+    >
       {/* Camada 1: Quadrados (Estática) */}
       <div className="absolute inset-0 grid grid-cols-8 grid-rows-8">
         {squares.map((sq) => {
           const isLastMove = lastMove && (sq.name === lastMove.slice(-2) || sq.name === lastMove.slice(0, 2));
           const isLegalMove = legalMoves?.includes(sq.name);
           const isCheck = checkSquare === sq.name;
+          const isManualCircle = manualArrows.some(a => a.from === sq.name && a.to === sq.name);
           
           return (
             <div
               key={sq.name}
+              onMouseDown={(e) => handleMouseDown(sq.name, e)}
+              onMouseUp={(e) => handleMouseUp(sq.name, e)}
               onClick={() => onSquareClick?.(sq.name)}
               className={`
                 relative flex items-center justify-center cursor-pointer
@@ -162,6 +225,10 @@ export default function CustomChessBoard({
                 ${isCheck ? 'after:absolute after:inset-0 after:bg-red-500/50 after:shadow-[inset_0_0_20px_rgba(255,0,0,0.5)] after:z-10' : ''}
               `}
             >
+              {/* Destaque Manual (Círculo) */}
+              {isManualCircle && (
+                <div className="absolute inset-0 z-30 pointer-events-none border-[6px] border-amber-400/50 rounded-full" />
+              )}
               {/* Coordenadas */}
               {sq.name.startsWith(boardOrientation === 'white' ? 'a' : 'h') && (
                 <span className={`absolute top-0.5 left-1 text-[9px] font-bold z-20 ${sq.isDark ? 'text-white/30' : 'text-black/20'}`}>
@@ -254,6 +321,94 @@ export default function CustomChessBoard({
           );
         })}
       </div>
+
+      {/* Camada 4: Setas de Análise + Manuais (SVG) */}
+      <svg 
+        className="absolute inset-0 pointer-events-none z-50 overflow-visible" 
+        viewBox="0 0 100 100"
+        style={{ width: '100%', height: '100%' }}
+      >
+        <defs>
+          <marker
+            id="arrowhead"
+            markerWidth="4"
+            markerHeight="4"
+            refX="2"
+            refY="2"
+            orient="auto"
+          >
+            <path d="M 0 0 L 4 2 L 0 4 z" fill="rgba(34, 197, 94, 0.6)" />
+          </marker>
+          <marker
+            id="arrowhead-manual"
+            markerWidth="4"
+            markerHeight="4"
+            refX="2"
+            refY="2"
+            orient="auto"
+          >
+            <path d="M 0 0 L 4 2 L 0 4 z" fill="rgba(251, 191, 36, 0.8)" />
+          </marker>
+        </defs>
+
+        {/* Setas do Motor (Verdes) */}
+        {arrows.map((arrow, idx) => {
+          const start = getSquareVisualCoord(arrow.from);
+          const end = getSquareVisualCoord(arrow.to);
+          
+          const dx = end.x - start.x;
+          const dy = end.y - start.y;
+          const length = Math.sqrt(dx * dx + dy * dy);
+          const shorten = 3; 
+          
+          const adjEndX = end.x - (dx / length) * shorten;
+          const adjEndY = end.y - (dy / length) * shorten;
+
+          return (
+            <line
+              key={`engine-arrow-${idx}`}
+              x1={start.x}
+              y1={start.y}
+              x2={adjEndX}
+              y2={adjEndY}
+              stroke={arrow.color || "rgba(34, 197, 94, 0.6)"}
+              strokeWidth="1.8"
+              markerEnd="url(#arrowhead)"
+              strokeLinecap="round"
+              className="animate-in fade-in duration-300"
+            />
+          );
+        })}
+
+        {/* Setas Manuais (Amarelas) - Filtramos para não desenhar setas de ponto zero (círculos) */}
+        {manualArrows.filter(a => a.from !== a.to).map((arrow, idx) => {
+          const start = getSquareVisualCoord(arrow.from);
+          const end = getSquareVisualCoord(arrow.to);
+          
+          const dx = end.x - start.x;
+          const dy = end.y - start.y;
+          const length = Math.sqrt(dx * dx + dy * dy);
+          if (length === 0) return null;
+          
+          const shorten = 3; 
+          const adjEndX = end.x - (dx / length) * shorten;
+          const adjEndY = end.y - (dy / length) * shorten;
+
+          return (
+            <line
+              key={`manual-arrow-${idx}`}
+              x1={start.x}
+              y1={start.y}
+              x2={adjEndX}
+              y2={adjEndY}
+              stroke={arrow.color || "rgba(251, 191, 36, 0.8)"}
+              strokeWidth="1.8"
+              markerEnd="url(#arrowhead-manual)"
+              strokeLinecap="round"
+            />
+          );
+        })}
+      </svg>
     </div>
   );
 }

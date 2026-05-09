@@ -11,10 +11,12 @@ import {
   Save, 
   Play, 
   Settings,
-  Info,
   History,
-  Brain
+  Trash2,
+  Brain,
+  Zap
 } from 'lucide-react';
+import { useStockfish } from '@/hooks/useStockfish';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
 import type { Database } from '@/types/database';
@@ -38,6 +40,29 @@ export default function StudyBoard({ repertoire, onUpdate }: Props) {
   const [debug, setDebug] = useState('');
   const [orientation, setOrientation] = useState<'white' | 'black'>('white');
   const [legalMoves, setLegalMoves] = useState<string[]>([]);
+  const [engineEnabled, setEngineEnabled] = useState(false);
+  const [manualArrows, setManualArrows] = useState<any[]>([]);
+  const { evaluation, bestMove, bestLine, isAnalyzing, analyzePosition } = useStockfish();
+
+  // Calcular a porcentagem da barra de vantagem
+  // 50% é neutro. +5.0 é ~100%, -5.0 é ~0%
+  const getEvalPercentage = () => {
+    if (evaluation.startsWith('M')) {
+      return evaluation.includes('-') ? 0 : 100;
+    }
+    const score = parseFloat(evaluation);
+    if (isNaN(score)) return 50;
+    // Mapear -5 a +5 para 0 a 100
+    const percent = 50 + (score * 10);
+    return Math.min(Math.max(percent, 5), 95); // Limitar para manter visível
+  };
+
+  // Analisar a posição quando o FEN mudar e o motor estiver ligado
+  useEffect(() => {
+    if (engineEnabled && isMounted) {
+      analyzePosition(gameRef.current.fen());
+    }
+  }, [engineEnabled, history, isMounted, analyzePosition]);
 
   useEffect(() => {
     if (repertoire?.color) {
@@ -71,6 +96,9 @@ export default function StudyBoard({ repertoire, onUpdate }: Props) {
   }
 
   const onSquareClick = (square: string) => {
+    // Clique normal limpa setas manuais
+    setManualArrows([]);
+
     // Se já temos uma casa selecionada, tentamos fazer o lance
     if (selectedSquare) {
       const move = onDrop(selectedSquare, square);
@@ -128,6 +156,7 @@ export default function StudyBoard({ repertoire, onUpdate }: Props) {
     setFen(gameRef.current.fen());
     setHistory(prev => prev.slice(0, -1));
     setLastMove(null);
+    setManualArrows([]); // Limpar setas ao voltar
   };
 
   const resetBoard = () => {
@@ -135,6 +164,7 @@ export default function StudyBoard({ repertoire, onUpdate }: Props) {
     setFen(gameRef.current.fen());
     setHistory([]);
     setLastMove(null);
+    setManualArrows([]); // Limpar setas ao resetar
   };
 
   const saveRepertoire = async () => {
@@ -181,6 +211,51 @@ export default function StudyBoard({ repertoire, onUpdate }: Props) {
       <div className="grid lg:grid-cols-12 gap-6">
         {/* Board Column */}
         <div className="lg:col-span-7 flex flex-col gap-4">
+          {/* Analysis Engine Panel */}
+          <div className="bg-white p-3 rounded-2xl shadow-sm border border-neutral-100 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setEngineEnabled(!engineEnabled)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-sm ${
+                  engineEnabled 
+                    ? 'bg-blue-600 text-white shadow-blue-500/20' 
+                    : 'bg-neutral-100 text-neutral-400'
+                }`}
+              >
+                <Zap size={14} className={engineEnabled ? 'fill-white' : ''} />
+                {engineEnabled ? 'Motor ON' : 'Ligar Motor'}
+              </button>
+
+              {engineEnabled && (
+                <div className="flex items-center gap-3 animate-in fade-in slide-in-from-left-2">
+                  <div className={`px-3 py-1.5 rounded-lg font-mono font-bold text-sm shadow-inner ${
+                    evaluation.startsWith('+') ? 'bg-green-50 text-green-700' : 
+                    evaluation.startsWith('-') ? 'bg-red-50 text-red-700' : 'bg-neutral-50 text-neutral-600'
+                  }`}>
+                    {evaluation}
+                  </div>
+                  {bestMove && !isAnalyzing && (
+                    <div className="text-xs font-medium text-neutral-500 bg-neutral-50 px-3 py-1.5 rounded-lg border border-neutral-100">
+                      Melhor lance: <span className="text-blue-600 font-bold uppercase">{bestMove}</span>
+                    </div>
+                  )}
+                  {isAnalyzing && (
+                    <div className="flex items-center gap-2 text-[10px] text-neutral-400 font-medium">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
+                      Analisando...
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+            
+            {!engineEnabled && (
+              <div className="text-[10px] font-medium text-neutral-400 italic">
+                Stockfish 16.1.0 pronto para análise
+              </div>
+            )}
+          </div>
+
           <div 
             ref={boardRef}
             className="aspect-square w-full max-w-[600px] mx-auto bg-white p-2.5 rounded-2xl shadow-large border border-neutral-100 relative"
@@ -197,6 +272,13 @@ export default function StudyBoard({ repertoire, onUpdate }: Props) {
                 selectedSquare={selectedSquare}
                 lastMove={lastMove}
                 legalMoves={legalMoves}
+                arrows={engineEnabled && bestMove ? [{ 
+                  from: bestMove.slice(0, 2), 
+                  to: bestMove.slice(2, 4),
+                  color: "rgba(34, 197, 94, 0.6)" // Verde suave
+                }] : []}
+                manualArrows={manualArrows}
+                onManualArrowsChange={setManualArrows}
                 checkSquare={gameRef.current.inCheck() ? (() => {
                   const board = gameRef.current.board();
                   for (let i = 0; i < 8; i++) {
@@ -310,7 +392,7 @@ export default function StudyBoard({ repertoire, onUpdate }: Props) {
             </div>
           </div>
 
-          {/* Engine Analysis Placeholder */}
+          {/* Engine Analysis Real-time Card */}
           <div className="card-surface p-5 bg-neutral-900 border-none">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
@@ -324,11 +406,17 @@ export default function StudyBoard({ repertoire, onUpdate }: Props) {
             
             <div className="space-y-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 text-xs font-mono text-blue-400 font-bold text-right">+0.4</div>
+                <div className={`w-10 text-xs font-mono font-bold text-right ${
+                  evaluation.startsWith('+') ? 'text-green-400' : 
+                  evaluation.startsWith('-') ? 'text-red-400' : 'text-blue-400'
+                }`}>
+                  {evaluation}
+                </div>
                 <div className="flex-1 h-2 bg-white/10 rounded-full overflow-hidden">
                   <motion.div 
-                    initial={{ width: '50%' }}
-                    animate={{ width: '55%' }}
+                    initial={false}
+                    animate={{ width: `${getEvalPercentage()}%` }}
+                    transition={{ type: 'spring', stiffness: 50, damping: 20 }}
                     className="h-full bg-blue-500"
                   />
                 </div>
@@ -336,9 +424,20 @@ export default function StudyBoard({ repertoire, onUpdate }: Props) {
               
               <div className="p-3 rounded-lg bg-white/5 border border-white/5">
                 <div className="text-[10px] text-neutral-500 font-bold uppercase mb-1">Melhor linha</div>
-                <p className="text-xs text-neutral-300 font-mono">
-                  {lastMove ? `... ${lastMove} Nf3 d6 d4 cxd4 Nxd4 Nf6 Nc3` : 'Aguardando lance...'}
-                </p>
+                <div className="flex flex-wrap gap-x-2 gap-y-1 text-xs text-neutral-300 font-mono">
+                  {bestLine.length > 0 ? (
+                    bestLine.map((mv, idx) => (
+                      <span key={idx} className={idx === 0 ? 'text-blue-400 font-bold' : ''}>
+                        {idx % 2 === 0 && gameRef.current.turn() === 'b' && idx === 0 ? '... ' : ''}
+                        {mv}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-neutral-500 italic">
+                      {engineEnabled ? 'Calculando...' : 'Ligue o motor para analisar'}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           </div>
