@@ -20,6 +20,17 @@ import { lookupOpening } from '@/lib/chess/openingDatabase';
 import { motion } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
 import type { Database } from '@/types/database';
+import { 
+  type ChessTree, 
+  type MoveNode, 
+  createEmptyTree, 
+  addMoveToTree, 
+  fromLinearHistory, 
+  getPathToNode,
+  getVariations,
+  getFullLineInfo,
+  type PathStep
+} from '@/lib/chess/moveTree';
 
 
 type Repertoire = Database['public']['Tables']['repertoires']['Row'];
@@ -54,7 +65,11 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
   const [manualArrows, setManualArrows] = useState<any[]>([]);
   const [currentOpening, setCurrentOpening] = useState<string | null>(null);
   const [selectedSquare, setSelectedSquare] = useState<string | null>(null);
-  const [, setRenderTick] = useState(0);
+  
+  // Árvore de lances
+  const [tree, setTree] = useState<ChessTree>(createEmptyTree(fen));
+  const [currentNodeId, setCurrentNodeId] = useState<string>('root');
+  const [renderTick, setRenderTick] = useState(0);
   
   const { evaluation, bestMove, bestLine, isAnalyzing, analyzePosition } = useStockfish();
 
@@ -117,23 +132,39 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
     if (onStateChange && isMounted) {
       onStateChange({
         fen,
-        history,
+        history: getPathToNode(tree, currentNodeId),
         opening: currentOpening,
         evaluation,
         bestLine,
         turn: gameRef.current.turn() as 'w' | 'b'
       });
     }
-  }, [fen, history, currentOpening, evaluation, bestLine, onStateChange, isMounted]);
+  }, [fen, tree, currentNodeId, currentOpening, evaluation, bestLine, onStateChange, isMounted]);
 
   // Sync state with repertoire when it changes from outside
   useEffect(() => {
     const saved = (repertoire.moves as any);
-    if (saved?.current_fen) {
-      gameRef.current = new Chess(saved.current_fen);
-      const newFen = gameRef.current.fen();
-      setFen(newFen);
-      setHistory(saved.history || []);
+    if (!saved) return;
+
+    if (saved.nodes) {
+      // Já é uma árvore
+      setTree(saved as ChessTree);
+      setCurrentNodeId(saved.activeNodeId || saved.rootId || 'root');
+      const activeNode = saved.nodes[saved.activeNodeId || saved.rootId || 'root'];
+      if (activeNode) {
+        gameRef.current = new Chess(activeNode.fen);
+        setFen(activeNode.fen);
+      }
+    } else if (saved.current_fen) {
+      // Migração de linear para árvore
+      const history = saved.history || [];
+      // Para migrar corretamente precisaríamos de todos os FENs históricos.
+      // Como não temos, vamos apenas começar do FEN atual ou resetar.
+      const newTree = createEmptyTree('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
+      setTree(newTree);
+      setCurrentNodeId('root');
+      gameRef.current = new Chess('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
+      setFen(gameRef.current.fen());
     }
   }, [repertoire.id]);
 
@@ -180,8 +211,11 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
       });
       if (move) {
         const newFen = gameRef.current.fen();
+        const { tree: newTree, nodeId } = addMoveToTree(tree, currentNodeId, move.san, newFen);
+        
+        setTree(newTree);
+        setCurrentNodeId(nodeId);
         setFen(newFen);
-        setHistory(prev => [...prev, move.san]);
         setLastMove(move.from + move.to);
         forceUpdate();
         return true;
@@ -193,19 +227,22 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
   }
 
   const undoMove = () => {
-    gameRef.current.undo();
-    const newFen = gameRef.current.fen();
-    setFen(newFen);
-    setHistory(prev => prev.slice(0, -1));
-    setLastMove(null);
-    setManualArrows([]);
+    const currentNode = tree.nodes[currentNodeId];
+    if (currentNode && currentNode.parentId) {
+      const parentNode = tree.nodes[currentNode.parentId];
+      gameRef.current = new Chess(parentNode.fen);
+      setFen(parentNode.fen);
+      setCurrentNodeId(parentNode.id);
+      setLastMove(null);
+      setManualArrows([]);
+    }
   };
 
   const resetBoard = () => {
-    gameRef.current = new Chess();
-    const newFen = gameRef.current.fen();
-    setFen(newFen);
-    setHistory([]);
+    setCurrentNodeId(tree.rootId);
+    const rootNode = tree.nodes[tree.rootId];
+    gameRef.current = new Chess(rootNode.fen);
+    setFen(rootNode.fen);
     setLastMove(null);
     setManualArrows([]);
   };
@@ -217,8 +254,8 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
       .from('repertoires') as any)
       .update({
         moves: {
-          current_fen: gameRef.current.fen(),
-          history: history,
+          ...tree,
+          activeNodeId: currentNodeId,
         },
         updated_at: new Date().toISOString(),
       })
@@ -336,7 +373,7 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
               <div className="w-[1px] h-6 bg-neutral-100 mx-1" />
               <button 
                 onClick={undoMove}
-                disabled={history.length === 0}
+                disabled={currentNodeId === tree.rootId}
                 className="p-2.5 rounded-xl hover:bg-neutral-100 text-neutral-500 disabled:opacity-30 transition-colors"
                 title="Desfazer"
               >
@@ -344,7 +381,7 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
               </button>
               <button 
                 onClick={resetBoard}
-                disabled={history.length === 0}
+                disabled={currentNodeId === tree.rootId}
                 className="p-2.5 rounded-xl hover:bg-neutral-100 text-neutral-500 disabled:opacity-30 transition-colors"
                 title="Reiniciar"
               >
@@ -379,7 +416,7 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
                 <h3 className="font-semibold text-neutral-800 text-sm">Notação</h3>
               </div>
               <span className="text-[10px] font-bold text-neutral-300 uppercase tracking-widest">
-                {history.length} Lances
+                {getPathToNode(tree, currentNodeId).length} Lances
               </span>
             </div>
 
@@ -391,34 +428,118 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
                 </span>
               </div>
             )}
-            
+
+            {/* Branch Navigator (Breadcrumbs) */}
+            {getFullLineInfo(tree, currentNodeId).length > 0 && (
+              <div className="px-4 py-3 bg-neutral-50/50 border-b border-neutral-100 flex flex-wrap gap-2 items-center">
+                <button 
+                  onClick={() => resetBoard()}
+                  className="p-1.5 rounded-lg hover:bg-neutral-200 text-neutral-400 transition-colors"
+                  title="Início"
+                >
+                  <RotateCcw size={12} />
+                </button>
+                <ChevronRight size={10} className="text-neutral-300" />
+                {getFullLineInfo(tree, currentNodeId).map((step, idx) => (
+                  <div key={step.nodeId} className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => {
+                          setCurrentNodeId(step.nodeId);
+                          gameRef.current = new Chess(tree.nodes[step.nodeId].fen);
+                          setFen(tree.nodes[step.nodeId].fen);
+                        }}
+                        className={`text-[11px] font-bold px-2 py-1 rounded-md transition-all ${
+                          idx === getFullLineInfo(tree, currentNodeId).length - 1
+                            ? 'bg-blue-600 text-white shadow-sm'
+                            : 'bg-white border border-neutral-200 text-neutral-600 hover:border-blue-300 hover:text-blue-600'
+                        }`}
+                      >
+                        {idx % 2 === 0 ? `${Math.floor(idx / 2) + 1}. ` : ''}{step.san}
+                      </button>
+                      
+                      {step.siblings.length > 0 && (
+                        <div className="flex gap-1">
+                          {step.siblings.map(sib => (
+                            <button
+                              key={sib.id}
+                              onClick={() => {
+                                setCurrentNodeId(sib.id);
+                                gameRef.current = new Chess(tree.nodes[sib.id].fen);
+                                setFen(tree.nodes[sib.id].fen);
+                              }}
+                              className="text-[9px] font-black w-5 h-5 flex items-center justify-center rounded-full bg-orange-100 text-orange-600 border border-orange-200 hover:bg-orange-600 hover:text-white transition-all"
+                              title={`Variante: ${sib.san}`}
+                            >
+                              +
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    {idx < getFullLineInfo(tree, currentNodeId).length - 1 && (
+                      <ChevronRight size={10} className="text-neutral-300" />
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
             <div className="p-4 overflow-y-auto max-h-[300px]">
-              {history.length === 0 ? (
+              {getPathToNode(tree, currentNodeId).length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-10 text-center opacity-40">
                   <Play size={24} className="mb-2" />
                   <p className="text-xs">Mova uma peça para<br />começar o estudo</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-2 gap-x-4 gap-y-1">
-                  {Array.from({ length: Math.ceil(history.length / 2) }).map((_, i) => (
-                    <div key={i} className="flex items-center gap-2 text-sm py-1 border-b border-neutral-50 last:border-0">
-                      <span className="w-5 text-neutral-300 font-mono text-[10px]">{i + 1}.</span>
-                      <div className="flex-1 grid grid-cols-2 gap-2">
-                        <span className={`px-2 py-0.5 rounded ${history.length === i*2 + 1 ? 'bg-blue-50 text-blue-700 font-bold' : 'text-neutral-700'}`}>
-                          {history[i * 2]}
-                        </span>
-                        {history[i * 2 + 1] && (
-                          <span className={`px-2 py-0.5 rounded ${history.length === i*2 + 2 ? 'bg-blue-50 text-blue-700 font-bold' : 'text-neutral-700'}`}>
-                            {history[i * 2 + 1]}
+                  {(() => {
+                    const currentLine = getPathToNode(tree, currentNodeId);
+                    return Array.from({ length: Math.ceil(currentLine.length / 2) }).map((_, i) => (
+                      <div key={i} className="flex items-center gap-2 text-sm py-1 border-b border-neutral-50 last:border-0">
+                        <span className="w-5 text-neutral-300 font-mono text-[10px]">{i + 1}.</span>
+                        <div className="flex-1 grid grid-cols-2 gap-2">
+                          <span className={`px-2 py-0.5 rounded ${currentLine.length === i*2 + 1 ? 'bg-blue-50 text-blue-700 font-bold' : 'text-neutral-700'}`}>
+                            {currentLine[i * 2]}
                           </span>
-                        )}
+                          {currentLine[i * 2 + 1] && (
+                            <span className={`px-2 py-0.5 rounded ${currentLine.length === i*2 + 2 ? 'bg-blue-50 text-blue-700 font-bold' : 'text-neutral-700'}`}>
+                              {currentLine[i * 2 + 1]}
+                            </span>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ));
+                  })()}
                 </div>
               )}
             </div>
           </div>
+
+          {/* Variations Section */}
+          {getVariations(tree, currentNodeId).length > 0 && (
+            <div className="card-surface p-4 animate-in fade-in slide-in-from-right-2">
+              <div className="flex items-center gap-2 mb-3">
+                <RefreshCw size={14} className="text-blue-500" />
+                <h4 className="text-xs font-bold uppercase tracking-wider text-neutral-600">Variantes nesta posição</h4>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {getVariations(tree, currentNodeId).map((variation) => (
+                  <button
+                    key={variation.id}
+                    onClick={() => {
+                      setCurrentNodeId(variation.id);
+                      gameRef.current = new Chess(variation.fen);
+                      setFen(variation.fen);
+                      setLastMove(null);
+                    }}
+                    className="px-3 py-2 rounded-xl bg-neutral-50 border border-neutral-100 hover:border-blue-200 hover:bg-blue-50 text-sm font-bold text-neutral-700 transition-all"
+                  >
+                    {variation.san}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
 
           <div className="card-surface p-5 bg-neutral-900 border-none">
