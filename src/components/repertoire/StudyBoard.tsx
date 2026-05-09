@@ -14,9 +14,11 @@ import {
   History,
   Trash2,
   Brain,
-  Zap
+  Zap,
+  Book
 } from 'lucide-react';
 import { useStockfish } from '@/hooks/useStockfish';
+import { lookupOpening } from '@/lib/chess/openingDatabase';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
 import type { Database } from '@/types/database';
@@ -31,30 +33,34 @@ interface Props {
 export default function StudyBoard({ repertoire, onUpdate }: Props) {
   const [isMounted, setIsMounted] = useState(false);
   const gameRef = useRef(new Chess());
-  const moves = repertoire.moves as any;
-  const [fen, setFen] = useState(moves?.current_fen || 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
-  const [history, setHistory] = useState<string[]>([]);
+  const savedMoves = repertoire.moves as any;
+  const [fen, setFen] = useState(savedMoves?.current_fen || 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
+  const [history, setHistory] = useState<string[]>(savedMoves?.history || []);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastMove, setLastMove] = useState<string | null>(null);
-  const [debug, setDebug] = useState('');
   const [orientation, setOrientation] = useState<'white' | 'black'>('white');
   const [legalMoves, setLegalMoves] = useState<string[]>([]);
   const [engineEnabled, setEngineEnabled] = useState(false);
   const [manualArrows, setManualArrows] = useState<any[]>([]);
+  const [currentOpening, setCurrentOpening] = useState<string | null>(null);
+  const [selectedSquare, setSelectedSquare] = useState<string | null>(null);
+  const [tick, setTick] = useState(0);
+  
   const { evaluation, bestMove, bestLine, isAnalyzing, analyzePosition } = useStockfish();
 
+  const forceUpdate = useCallback(() => setTick(t => t + 1), []);
+  const supabase = createClient();
+
   // Calcular a porcentagem da barra de vantagem
-  // 50% é neutro. +5.0 é ~100%, -5.0 é ~0%
   const getEvalPercentage = () => {
     if (evaluation.startsWith('M')) {
       return evaluation.includes('-') ? 0 : 100;
     }
     const score = parseFloat(evaluation);
     if (isNaN(score)) return 50;
-    // Mapear -5 a +5 para 0 a 100
     const percent = 50 + (score * 10);
-    return Math.min(Math.max(percent, 5), 95); // Limitar para manter visível
+    return Math.min(Math.max(percent, 5), 95);
   };
 
   // Analisar a posição quando o FEN mudar e o motor estiver ligado
@@ -69,26 +75,44 @@ export default function StudyBoard({ repertoire, onUpdate }: Props) {
       setOrientation(repertoire.color as 'white' | 'black');
     }
   }, [repertoire]);
-  const [selectedSquare, setSelectedSquare] = useState<string | null>(null);
-
-  const supabase = createClient();
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
+  // Novo: Identificação de abertura aprimorada (Local + API com detecção de transposição)
+  useEffect(() => {
+    if (!isMounted) return;
+    
+    let isCancelled = false;
+    
+    async function identify() {
+      const currentFen = gameRef.current.fen();
+      
+      try {
+        const info = await lookupOpening(currentFen);
+        if (info && !isCancelled) {
+          setCurrentOpening(`${info.eco}: ${info.name}`);
+        }
+      } catch (e) {
+        console.error("Erro na identificação da abertura:", e);
+      }
+    }
+
+    identify();
+    return () => { isCancelled = true; };
+  }, [fen, isMounted]);
+
   // Sync state with repertoire when it changes from outside
   useEffect(() => {
-    const savedMoves = (repertoire.moves as any);
-    if (savedMoves?.current_fen) {
-      gameRef.current = new Chess(savedMoves.current_fen);
-      setFen(gameRef.current.fen());
-      setHistory(savedMoves.history || []);
+    const saved = (repertoire.moves as any);
+    if (saved?.current_fen) {
+      gameRef.current = new Chess(saved.current_fen);
+      const newFen = gameRef.current.fen();
+      setFen(newFen);
+      setHistory(saved.history || []);
     }
-  }, [repertoire.id]); // Only re-sync if the ID changes to avoid loops
-
-  const [tick, setTick] = useState(0);
-  const forceUpdate = useCallback(() => setTick(t => t + 1), []);
+  }, [repertoire.id]);
 
   // Initialize engine safely
   if (!gameRef.current || (typeof gameRef.current.fen !== 'function')) {
@@ -96,10 +120,7 @@ export default function StudyBoard({ repertoire, onUpdate }: Props) {
   }
 
   const onSquareClick = (square: string) => {
-    // Clique normal limpa setas manuais
     setManualArrows([]);
-
-    // Se já temos uma casa selecionada, tentamos fazer o lance
     if (selectedSquare) {
       const move = onDrop(selectedSquare, square);
       if (move) {
@@ -109,15 +130,11 @@ export default function StudyBoard({ repertoire, onUpdate }: Props) {
         return;
       }
     }
-
-    // Se clicou na mesma casa, deseleciona
     if (selectedSquare === square) {
       setSelectedSquare(null);
       setLegalMoves([]);
       return;
     }
-
-    // Tentar selecionar uma peça e calcular lances legais
     const piece = gameRef.current.get(square as any);
     if (piece) {
       setSelectedSquare(square);
@@ -139,6 +156,8 @@ export default function StudyBoard({ repertoire, onUpdate }: Props) {
         promotion: 'q',
       });
       if (move) {
+        const newFen = gameRef.current.fen();
+        setFen(newFen);
         setHistory(prev => [...prev, move.san]);
         setLastMove(move.from + move.to);
         forceUpdate();
@@ -150,27 +169,27 @@ export default function StudyBoard({ repertoire, onUpdate }: Props) {
     }
   }
 
-
   const undoMove = () => {
     gameRef.current.undo();
-    setFen(gameRef.current.fen());
+    const newFen = gameRef.current.fen();
+    setFen(newFen);
     setHistory(prev => prev.slice(0, -1));
     setLastMove(null);
-    setManualArrows([]); // Limpar setas ao voltar
+    setManualArrows([]);
   };
 
   const resetBoard = () => {
     gameRef.current = new Chess();
-    setFen(gameRef.current.fen());
+    const newFen = gameRef.current.fen();
+    setFen(newFen);
     setHistory([]);
     setLastMove(null);
-    setManualArrows([]); // Limpar setas ao resetar
+    setManualArrows([]);
   };
 
   const saveRepertoire = async () => {
     setLoading(true);
     setError(null);
-
     const { data, error: updateError } = await (supabase
       .from('repertoires') as any)
       .update({
@@ -193,25 +212,11 @@ export default function StudyBoard({ repertoire, onUpdate }: Props) {
   };
 
   const boardRef = useRef<HTMLDivElement>(null);
-  const [boardWidth, setBoardWidth] = useState(560);
-
-  useEffect(() => {
-    if (boardRef.current) {
-      setBoardWidth(boardRef.current.offsetWidth - 20);
-    }
-    const handleResize = () => {
-      if (boardRef.current) setBoardWidth(boardRef.current.offsetWidth - 20);
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [isMounted]);
 
   return (
     <div className="flex flex-col gap-6">
       <div className="grid lg:grid-cols-12 gap-6">
-        {/* Board Column */}
         <div className="lg:col-span-7 flex flex-col gap-4">
-          {/* Analysis Engine Panel */}
           <div className="bg-white p-3 rounded-2xl shadow-sm border border-neutral-100 flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <button
@@ -248,7 +253,6 @@ export default function StudyBoard({ repertoire, onUpdate }: Props) {
                 </div>
               )}
             </div>
-            
             {!engineEnabled && (
               <div className="text-[10px] font-medium text-neutral-400 italic">
                 Stockfish 16.1.0 pronto para análise
@@ -275,7 +279,7 @@ export default function StudyBoard({ repertoire, onUpdate }: Props) {
                 arrows={engineEnabled && bestMove ? [{ 
                   from: bestMove.slice(0, 2), 
                   to: bestMove.slice(2, 4),
-                  color: "rgba(34, 197, 94, 0.6)" // Verde suave
+                  color: "rgba(34, 197, 94, 0.6)" 
                 }] : []}
                 manualArrows={manualArrows}
                 onManualArrowsChange={setManualArrows}
@@ -300,8 +304,6 @@ export default function StudyBoard({ repertoire, onUpdate }: Props) {
             )}
           </div>
 
-
-          {/* Board Controls */}
           <div className="flex items-center justify-between px-2">
             <div className="flex items-center gap-1 bg-white p-1 rounded-2xl shadow-sm border border-neutral-100">
               <button 
@@ -331,7 +333,6 @@ export default function StudyBoard({ repertoire, onUpdate }: Props) {
             </div>
 
             <div className="flex items-center gap-2">
-              {error && <span className="text-xs text-red-500 mr-2">{error}</span>}
               <button
                 onClick={saveRepertoire}
                 disabled={loading}
@@ -350,9 +351,7 @@ export default function StudyBoard({ repertoire, onUpdate }: Props) {
           </div>
         </div>
 
-        {/* Moves & Info Column */}
         <div className="lg:col-span-5 flex flex-col gap-4">
-          {/* History Card */}
           <div className="card-surface flex-1 flex flex-col min-h-[300px]">
             <div className="p-4 border-b border-neutral-100 flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -363,6 +362,15 @@ export default function StudyBoard({ repertoire, onUpdate }: Props) {
                 {history.length} Lances
               </span>
             </div>
+
+            {currentOpening && (
+              <div className="px-4 py-2 bg-blue-50/50 border-b border-blue-100 flex items-center gap-2 animate-in fade-in slide-in-from-top-1">
+                <Book size={12} className="text-blue-500" />
+                <span className="text-[11px] font-bold text-blue-700 truncate">
+                  {currentOpening}
+                </span>
+              </div>
+            )}
             
             <div className="p-4 overflow-y-auto max-h-[400px]">
               {history.length === 0 ? (
@@ -392,7 +400,6 @@ export default function StudyBoard({ repertoire, onUpdate }: Props) {
             </div>
           </div>
 
-          {/* Engine Analysis Real-time Card */}
           <div className="card-surface p-5 bg-neutral-900 border-none">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
