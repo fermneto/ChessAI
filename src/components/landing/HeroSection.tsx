@@ -9,7 +9,7 @@ export default function HeroSection() {
   return (
     <section
       id="hero"
-      className="gradient-hero pt-32 pb-20 md:pt-40 md:pb-32 relative overflow-hidden"
+      className="gradient-hero pt-32 pb-28 md:pt-40 md:pb-40 relative overflow-hidden"
     >
       {/* Decorative background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -102,6 +102,26 @@ export default function HeroSection() {
           </motion.div>
         </div>
       </div>
+
+      {/* Scroll indicator */}
+      <motion.a
+        href="#features"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.8, delay: 1.2 }}
+        className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 cursor-pointer group"
+        aria-label="Rolar para ver mais"
+      >
+        <span className="text-[11px] font-medium uppercase tracking-widest text-neutral-400 group-hover:text-neutral-600 transition-colors">
+          Descubra mais
+        </span>
+        <motion.div
+          animate={{ y: [0, 6, 0] }}
+          transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
+        >
+          <ChevronDown size={20} className="text-neutral-400 group-hover:text-neutral-600 transition-colors" />
+        </motion.div>
+      </motion.a>
     </section>
   );
 }
