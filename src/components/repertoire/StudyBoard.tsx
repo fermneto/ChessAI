@@ -460,33 +460,6 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
             </div>
           </div>
 
-          {/* Variations Section */}
-          {getVariations(tree, currentNodeId).length > 0 && (
-            <div className="card-surface p-4 animate-in fade-in slide-in-from-right-2">
-              <div className="flex items-center gap-2 mb-3">
-                <RefreshCw size={14} className="text-blue-500" />
-                <h4 className="text-xs font-bold uppercase tracking-wider text-neutral-600">Variantes nesta posição</h4>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {getVariations(tree, currentNodeId).map((variation) => (
-                  <button
-                    key={variation.id}
-                    onClick={() => {
-                      setCurrentNodeId(variation.id);
-                      gameRef.current = new Chess(variation.fen);
-                      setFen(variation.fen);
-                      setLastMove(null);
-                    }}
-                    className="px-3 py-2 rounded-xl bg-neutral-50 border border-neutral-100 hover:border-blue-200 hover:bg-blue-50 text-sm font-bold text-neutral-700 transition-all"
-                  >
-                    {variation.san}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-
           <div className="card-surface p-5 bg-neutral-900 border-none">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
@@ -538,73 +511,92 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
         </div>
       </div>
 
-      {/* Branch Navigator - Full Width below the grid */}
-      {getFullLineInfo(tree, currentNodeId).length > 0 && (
-        <div className="card-surface p-5 bg-neutral-50/50 border-dashed border-neutral-200 mt-2 animate-in fade-in slide-in-from-bottom-3">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <History size={16} className="text-blue-500" />
-              <h4 className="text-[11px] font-bold uppercase tracking-widest text-neutral-500">Linha do Estudo / Variantes</h4>
-            </div>
-            <div className="text-[10px] text-neutral-400 italic">
-              Clique nos lances ou nos botões "+" para navegar pelas ramificações
-            </div>
-          </div>
-          
-          <div className="flex flex-wrap gap-3 items-center">
+      {/* Branch & Variation Navigator - Refactored */}
+      <div className="mt-4 flex flex-col gap-4">
+        {/* 1. Breadcrumbs (Current Path) */}
+        {getFullLineInfo(tree, currentNodeId).length > 0 && (
+          <div className="flex items-center gap-2 overflow-x-auto py-2 no-scrollbar">
             <button 
               onClick={() => resetBoard()}
-              className="p-2 rounded-xl hover:bg-neutral-200 text-neutral-400 transition-colors bg-white border border-neutral-100 shadow-sm"
-              title="Voltar ao início"
+              className="p-2 rounded-lg hover:bg-neutral-100 text-neutral-400 transition-colors shrink-0"
+              title="Início"
             >
               <RotateCcw size={14} />
             </button>
-            <ChevronRight size={12} className="text-neutral-300" />
-            {getFullLineInfo(tree, currentNodeId).map((step, idx) => (
-              <div key={step.nodeId} className="flex items-center gap-2">
-                <div className="flex items-center gap-1.5">
+            <ChevronRight size={12} className="text-neutral-300 shrink-0" />
+            <div className="flex items-center gap-1">
+              {getFullLineInfo(tree, currentNodeId).map((step, idx) => (
+                <div key={step.nodeId} className="flex items-center">
                   <button
                     onClick={() => {
                       setCurrentNodeId(step.nodeId);
                       gameRef.current = new Chess(tree.nodes[step.nodeId].fen);
                       setFen(tree.nodes[step.nodeId].fen);
                     }}
-                    className={`text-[0.8125rem] font-bold px-3 py-1.5 rounded-xl transition-all ${
+                    className={`text-[0.8125rem] font-medium px-2 py-1 rounded-md transition-all whitespace-nowrap ${
                       idx === getFullLineInfo(tree, currentNodeId).length - 1
-                        ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
-                        : 'bg-white border border-neutral-200 text-neutral-600 hover:border-blue-300 hover:text-blue-600 shadow-sm'
+                        ? 'text-blue-600 font-bold bg-blue-50'
+                        : 'text-neutral-500 hover:text-neutral-900 hover:bg-neutral-50'
                     }`}
                   >
                     {idx % 2 === 0 ? `${Math.floor(idx / 2) + 1}. ` : ''}{step.san}
                   </button>
-                  
-                  {step.siblings.length > 0 && (
-                    <div className="flex gap-1">
-                      {step.siblings.map(sib => (
-                        <button
-                          key={sib.id}
-                          onClick={() => {
-                            setCurrentNodeId(sib.id);
-                            gameRef.current = new Chess(tree.nodes[sib.id].fen);
-                            setFen(tree.nodes[sib.id].fen);
-                          }}
-                          className="text-[10px] font-black w-6 h-6 flex items-center justify-center rounded-full bg-orange-100 text-orange-600 border border-orange-200 hover:bg-orange-600 hover:text-white transition-all shadow-sm"
-                          title={`Variante: ${sib.san}`}
-                        >
-                          +
-                        </button>
-                      ))}
-                    </div>
+                  {idx < getFullLineInfo(tree, currentNodeId).length - 1 && (
+                    <ChevronRight size={10} className="text-neutral-300 mx-1 shrink-0" />
                   )}
                 </div>
-                {idx < getFullLineInfo(tree, currentNodeId).length - 1 && (
-                  <ChevronRight size={12} className="text-neutral-300" />
-                )}
-              </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* 2. Variation Explorer (Continuations) */}
+        <div className="card-surface p-5 bg-white border border-neutral-100 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <RefreshCw size={16} className="text-blue-500" />
+              <h4 className="text-xs font-bold uppercase tracking-wider text-neutral-600">Explorar Variantes</h4>
+            </div>
+            <span className="text-[10px] text-neutral-400 font-medium">
+              {getVariations(tree, currentNodeId).length} lances salvos nesta posição
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            {/* Show saved variations */}
+            {getVariations(tree, currentNodeId).map((variation) => (
+              <button
+                key={variation.id}
+                onClick={() => {
+                  setCurrentNodeId(variation.id);
+                  gameRef.current = new Chess(variation.fen);
+                  setFen(variation.fen);
+                  setLastMove(null);
+                }}
+                className="group relative flex flex-col items-center justify-center p-4 rounded-2xl bg-neutral-50 border border-neutral-100 hover:border-blue-300 hover:bg-blue-50 transition-all hover:shadow-md"
+              >
+                <span className="text-lg font-black text-neutral-800 group-hover:text-blue-600 transition-colors">
+                  {variation.san}
+                </span>
+                <span className="text-[9px] text-neutral-400 uppercase font-bold mt-1">
+                  Linha salva
+                </span>
+              </button>
             ))}
+
+            {/* Empty state or "Add new" hint */}
+            {getVariations(tree, currentNodeId).length === 0 && (
+              <div className="col-span-full py-8 border-2 border-dashed border-neutral-100 rounded-3xl flex flex-col items-center justify-center text-neutral-400">
+                <Play size={20} className="mb-2 opacity-20" />
+                <p className="text-[11px] font-medium text-center">
+                  Nenhuma variante salva aqui.<br />
+                  <span className="text-blue-500">Mova uma peça</span> para criar uma nova branche.
+                </p>
+              </div>
+            )}
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }

@@ -25,7 +25,7 @@ export default function Navbar() {
     <>
       <header
         className={clsx(
-          'fixed top-0 inset-x-0 z-50 transition-all duration-300',
+          'fixed top-0 inset-x-0 z-[100] transition-all duration-300',
           scrolled
             ? 'bg-white/90 backdrop-blur-xl border-b border-neutral-100 shadow-soft'
             : 'bg-transparent'
@@ -97,7 +97,7 @@ export default function Navbar() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className="fixed top-16 inset-x-0 z-40 bg-white border-b border-neutral-100 shadow-large md:hidden"
+            className="fixed top-16 inset-x-0 z-[90] bg-white border-b border-neutral-100 shadow-large md:hidden"
           >
             <div className="container-app py-4 flex flex-col gap-1">
               {navLinks.map((link) => (

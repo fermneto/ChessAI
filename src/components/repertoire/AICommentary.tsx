@@ -29,7 +29,7 @@ export default function AICommentary({
   const [historyComments, setHistoryComments] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [autoExplain, setAutoExplain] = useState(true);
+  const [autoExplain, setAutoExplain] = useState(false);
 
   const fetchCommentary = async () => {
     if (history.length === 0) return;
