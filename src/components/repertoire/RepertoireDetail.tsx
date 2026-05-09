@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import {
@@ -18,7 +18,8 @@ import {
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import type { Database } from '@/types/database';
-import StudyBoard from './StudyBoard';
+import StudyBoard, { type StudyState } from './StudyBoard';
+import AICommentary from './AICommentary';
 
 type Repertoire = Database['public']['Tables']['repertoires']['Row'];
 
@@ -39,9 +40,14 @@ export default function RepertoireDetail({ repertoire: initial }: Props) {
   const [editDescription, setEditDescription] = useState(repertoire.description ?? '');
   const [editOpeningName, setEditOpeningName] = useState(repertoire.opening_name ?? '');
   const [editColor, setEditColor] = useState(repertoire.color);
+  const [studyState, setStudyState] = useState<StudyState | null>(null);
 
   const router = useRouter();
   const supabase = createClient();
+
+  const handleStudyStateChange = useCallback((state: StudyState) => {
+    setStudyState(state);
+  }, []);
 
   const startEditing = () => {
     setEditName(repertoire.name);
@@ -315,6 +321,7 @@ export default function RepertoireDetail({ repertoire: initial }: Props) {
               <StudyBoard 
                 repertoire={repertoire} 
                 onUpdate={(updated) => setRepertoire(updated)} 
+                onStateChange={handleStudyStateChange}
               />
             </div>
           </div>
@@ -387,6 +394,20 @@ export default function RepertoireDetail({ repertoire: initial }: Props) {
                   ))}
                 </div>
               </div>
+            )}
+
+            {/* AI Commentary */}
+            {studyState && (
+              <AICommentary 
+                fen={studyState.fen}
+                history={studyState.history}
+                opening={studyState.opening}
+                evaluation={studyState.evaluation}
+                bestLine={studyState.bestLine}
+                turn={studyState.turn}
+                repertoireName={repertoire.name}
+                repertoireDescription={repertoire.description ?? undefined}
+              />
             )}
 
             {/* Quick actions */}

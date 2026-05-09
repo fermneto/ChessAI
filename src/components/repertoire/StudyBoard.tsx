@@ -10,27 +10,36 @@ import {
   RefreshCw,
   Save, 
   Play, 
-  Settings,
   History,
-  Trash2,
   Brain,
   Zap,
   Book
 } from 'lucide-react';
 import { useStockfish } from '@/hooks/useStockfish';
 import { lookupOpening } from '@/lib/chess/openingDatabase';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
 import type { Database } from '@/types/database';
 
+
 type Repertoire = Database['public']['Tables']['repertoires']['Row'];
+
+export interface StudyState {
+  fen: string;
+  history: string[];
+  opening: string | null;
+  evaluation: string;
+  bestLine: string[];
+  turn: 'w' | 'b';
+}
 
 interface Props {
   repertoire: Repertoire;
   onUpdate?: (updated: Repertoire) => void;
+  onStateChange?: (state: StudyState) => void;
 }
 
-export default function StudyBoard({ repertoire, onUpdate }: Props) {
+export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Props) {
   const [isMounted, setIsMounted] = useState(false);
   const gameRef = useRef(new Chess());
   const savedMoves = repertoire.moves as any;
@@ -45,11 +54,11 @@ export default function StudyBoard({ repertoire, onUpdate }: Props) {
   const [manualArrows, setManualArrows] = useState<any[]>([]);
   const [currentOpening, setCurrentOpening] = useState<string | null>(null);
   const [selectedSquare, setSelectedSquare] = useState<string | null>(null);
-  const [tick, setTick] = useState(0);
+  const [, setRenderTick] = useState(0);
   
   const { evaluation, bestMove, bestLine, isAnalyzing, analyzePosition } = useStockfish();
 
-  const forceUpdate = useCallback(() => setTick(t => t + 1), []);
+  const forceUpdate = useCallback(() => setRenderTick(t => t + 1), []);
   const supabase = createClient();
 
   // Calcular a porcentagem da barra de vantagem
@@ -102,6 +111,20 @@ export default function StudyBoard({ repertoire, onUpdate }: Props) {
     identify();
     return () => { isCancelled = true; };
   }, [fen, isMounted]);
+
+  // Notificar o pai sobre mudanças no estado de estudo
+  useEffect(() => {
+    if (onStateChange && isMounted) {
+      onStateChange({
+        fen,
+        history,
+        opening: currentOpening,
+        evaluation,
+        bestLine,
+        turn: gameRef.current.turn() as 'w' | 'b'
+      });
+    }
+  }, [fen, history, currentOpening, evaluation, bestLine, onStateChange, isMounted]);
 
   // Sync state with repertoire when it changes from outside
   useEffect(() => {
@@ -211,8 +234,6 @@ export default function StudyBoard({ repertoire, onUpdate }: Props) {
     setLoading(false);
   };
 
-  const boardRef = useRef<HTMLDivElement>(null);
-
   return (
     <div className="flex flex-col gap-6">
       <div className="grid lg:grid-cols-12 gap-6">
@@ -260,8 +281,7 @@ export default function StudyBoard({ repertoire, onUpdate }: Props) {
             )}
           </div>
 
-          <div 
-            ref={boardRef}
+          <div
             className="aspect-square w-full max-w-[600px] mx-auto bg-white p-2.5 rounded-2xl shadow-large border border-neutral-100 relative"
           >
             {!isMounted ? (
@@ -351,9 +371,9 @@ export default function StudyBoard({ repertoire, onUpdate }: Props) {
           </div>
         </div>
 
-        <div className="lg:col-span-5 flex flex-col gap-4">
-          <div className="card-surface flex-1 flex flex-col min-h-[300px]">
-            <div className="p-4 border-b border-neutral-100 flex items-center justify-between">
+        <div className="lg:col-span-5 flex flex-col gap-5">
+          <div className="card-surface flex flex-col min-h-[300px]">
+            <div className="p-4 border-b border-neutral-100 flex items-center justify-between bg-neutral-50/30">
               <div className="flex items-center gap-2">
                 <History size={16} className="text-neutral-400" />
                 <h3 className="font-semibold text-neutral-800 text-sm">Notação</h3>
@@ -372,7 +392,7 @@ export default function StudyBoard({ repertoire, onUpdate }: Props) {
               </div>
             )}
             
-            <div className="p-4 overflow-y-auto max-h-[400px]">
+            <div className="p-4 overflow-y-auto max-h-[300px]">
               {history.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-10 text-center opacity-40">
                   <Play size={24} className="mb-2" />
@@ -399,6 +419,7 @@ export default function StudyBoard({ repertoire, onUpdate }: Props) {
               )}
             </div>
           </div>
+
 
           <div className="card-surface p-5 bg-neutral-900 border-none">
             <div className="flex items-center justify-between mb-4">

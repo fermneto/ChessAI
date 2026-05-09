@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 interface Props {
   position: string;
@@ -129,7 +129,7 @@ export default function CustomChessBoard({
   const pieceMapRef = useRef<Record<string, string>>({});
   
   // Gerar as peças de forma síncrona para evitar "piscadas"
-  const { floatingPieces, newPieceMap } = useMemo(() => {
+  const { floatingPieces } = useMemo(() => {
     const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
     const ranks = ['8', '7', '6', '5', '4', '3', '2', '1'];
     const nextPieces = [];

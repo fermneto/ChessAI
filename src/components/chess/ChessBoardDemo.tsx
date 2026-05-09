@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Chess } from 'chess.js';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Brain, Info, RefreshCw, X, ChevronRight } from 'lucide-react';
@@ -17,11 +17,11 @@ const DEMO_SEQUENCE = [
   { move: 'Bc4', analysis: 'Abertura Italiana. Pressão imediata em f7.', evaluation: '+0.5', label: '3. Bc4' },
 ];
 
-// Component already declared above
+
 
 export default function ChessBoardDemo() {
   const [isMounted, setIsMounted] = useState(false);
-  const [tick, setTick] = useState(0);
+  const [, setTick] = useState(0);
   const [index, setIndex] = useState(-1);
   const [showFinalModal, setShowFinalModal] = useState(false);
   const gameRef = useRef(new Chess());

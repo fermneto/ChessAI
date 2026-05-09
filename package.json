@@ -9,16 +9,17 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@supabase/ssr": "latest",
     "@supabase/supabase-js": "latest",
     "@tailwindcss/postcss": "^4.3.0",
     "chess.js": "latest",
     "clsx": "latest",
+    "dotenv": "^17.4.2",
     "framer-motion": "latest",
     "lucide-react": "latest",
     "next": "15",
     "react": "19",
-    "react-chessboard": "latest",
     "react-dom": "19"
   },
   "devDependencies": {

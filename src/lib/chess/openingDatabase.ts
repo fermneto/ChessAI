@@ -25,7 +25,6 @@ async function loadDatabase() {
     const response = await fetch('/openings.json');
     if (response.ok) {
       localDatabase = await response.json();
-      console.log(`Base de aberturas carregada: ${Object.keys(localDatabase!).length} posições.`);
     }
   } catch (error) {
     console.error('Erro ao carregar base de aberturas:', error);

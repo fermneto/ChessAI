@@ -15,7 +15,7 @@ export function useStockfish() {
     
     stockfishWorker.onmessage = (e) => {
       const line = e.data;
-      // console.log('SF16:', line); 
+
       
       if (line.includes('info') && line.includes(' score ')) {
         const parts = line.split(' ');
