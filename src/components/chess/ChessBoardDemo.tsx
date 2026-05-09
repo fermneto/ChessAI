@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { Chessboard } from 'react-chessboard';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { Chess } from 'chess.js';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Brain, Info, RefreshCw, X, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
+import CustomChessBoard from './CustomChessBoard';
 
 const START_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 
@@ -17,13 +17,23 @@ const DEMO_SEQUENCE = [
   { move: 'Bc4', analysis: 'Abertura Italiana. Pressão imediata em f7.', evaluation: '+0.5', label: '3. Bc4' },
 ];
 
+// Component already declared above
+
 export default function ChessBoardDemo() {
+  const [isMounted, setIsMounted] = useState(false);
+  const [tick, setTick] = useState(0);
   const [index, setIndex] = useState(-1);
-  const [fen, setFen] = useState(START_FEN);
   const [showFinalModal, setShowFinalModal] = useState(false);
+  const gameRef = useRef(new Chess());
 
   useEffect(() => {
-    if (showFinalModal || index >= DEMO_SEQUENCE.length - 1) {
+    setIsMounted(true);
+  }, []);
+
+  const [lastMove, setLastMove] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isMounted || showFinalModal || index >= DEMO_SEQUENCE.length - 1) {
       if (index === DEMO_SEQUENCE.length - 1 && !showFinalModal) {
         const modalTimer = setTimeout(() => setShowFinalModal(true), 1000);
         return () => clearTimeout(modalTimer);
@@ -33,13 +43,12 @@ export default function ChessBoardDemo() {
 
     const timer = setTimeout(() => {
       const nextIndex = index + 1;
-
-      const tempGame = new Chess(fen);
       try {
-        const moveResult = tempGame.move(DEMO_SEQUENCE[nextIndex].move);
+        const moveResult = gameRef.current.move(DEMO_SEQUENCE[nextIndex].move);
         if (moveResult) {
-          setFen(tempGame.fen());
           setIndex(nextIndex);
+          setLastMove(moveResult.from + moveResult.to);
+          setTick(t => t + 1);
         }
       } catch (e) {
         console.error("Erro ao mover:", e);
@@ -48,19 +57,21 @@ export default function ChessBoardDemo() {
     }, 1800);
 
     return () => clearTimeout(timer);
-  }, [index, fen, showFinalModal]);
+  }, [index, showFinalModal, isMounted]);
 
   const resetDemo = () => {
-    setFen(START_FEN);
+    gameRef.current = new Chess();
     setIndex(-1);
+    setLastMove(null);
+    setTick(t => t + 1);
     setShowFinalModal(false);
   };
 
   return (
     <div className="relative w-full max-w-[500px] mx-auto">
-      {/* AI Analysis Card (Top-Left) */}
+      {/* ... (Analysis and Info cards) ... */}
       <AnimatePresence mode="wait">
-        {!showFinalModal && index !== -1 && (
+        {isMounted && !showFinalModal && index !== -1 && (
           <motion.div
             key={`analysis-${index}`}
             initial={{ opacity: 0, x: -20, y: 5 }}
@@ -89,9 +100,8 @@ export default function ChessBoardDemo() {
         )}
       </AnimatePresence>
 
-      {/* Final Opening Info Card (Bottom-Right) */}
       <AnimatePresence>
-        {showFinalModal && (
+        {isMounted && showFinalModal && (
           <motion.div
             key="final-info"
             initial={{ opacity: 0, x: 30, y: 20 }}
@@ -133,20 +143,18 @@ export default function ChessBoardDemo() {
         )}
       </AnimatePresence>
 
-      {/* The Board */}
-      <div className="chess-board-wrapper relative z-10 bg-white p-2.5 rounded-2xl shadow-[0_30px_100px_rgba(0,0,0,0.1)] border border-slate-100">
-        <Chessboard
-          options={{
-            position: fen,
-            boardOrientation: 'white',
-            allowDragging: false,
-            darkSquareStyle: { backgroundColor: '#64748b' },
-            lightSquareStyle: { backgroundColor: '#e2e8f0' },
-            animationDurationInMs: 500,
-          }}
-        />
+      <div className="chess-board-wrapper relative z-10 bg-white p-2.5 rounded-2xl shadow-[0_30px_100px_rgba(0,0,0,0.1)] border border-slate-100 overflow-hidden">
+        {!isMounted ? (
+           <div className="w-full aspect-square bg-neutral-100 animate-pulse rounded-xl" />
+        ) : (
+          <CustomChessBoard
+            position={gameRef.current.fen()}
+            boardOrientation="white"
+            lastMove={lastMove}
+          />
+        )}
 
-        {!showFinalModal && (
+        {isMounted && !showFinalModal && (
           <div className="absolute inset-0 z-30 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity bg-black/5 cursor-default group">
             <span className="bg-white/90 backdrop-blur px-5 py-2.5 rounded-full text-xs font-bold text-neutral-800 shadow-xl border border-white transform translate-y-2 group-hover:translate-y-0 transition-transform">
               Modo demonstração
