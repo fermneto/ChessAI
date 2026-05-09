@@ -29,6 +29,7 @@ export default function AICommentary({
   const [historyComments, setHistoryComments] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [autoExplain, setAutoExplain] = useState(true);
 
   const fetchCommentary = async () => {
     if (history.length === 0) return;
@@ -59,6 +60,15 @@ export default function AICommentary({
     } catch (err: any) {
       setError(err.message || 'Não foi possível carregar a explicação da IA.');
       console.error(err);
+      
+      // Smart pause: if quota error, disable auto-explain for 60s
+      if (err.message?.includes('limite de consultas') || err.message?.includes('Quota')) {
+        setAutoExplain(false);
+        setTimeout(() => {
+          setAutoExplain(true);
+          setError(null);
+        }, 60000); // 60s cooldown
+      }
     } finally {
       setLoading(false);
     }
@@ -67,24 +77,39 @@ export default function AICommentary({
   // Auto-fetch commentary after a short delay when move changes
   // to avoid spamming the API while the user is moving fast
   useEffect(() => {
-    if (history.length === 0) {
-      setCommentary(null);
+    if (history.length === 0 || !autoExplain) {
+      if (history.length === 0) setCommentary(null);
       return;
     }
 
     const timer = setTimeout(() => {
       fetchCommentary();
-    }, 1500); // 1.5s delay
+    }, 3000); // 3s delay to avoid hitting rate limits
 
     return () => clearTimeout(timer);
-  }, [fen]);
+  }, [fen, autoExplain]);
 
   return (
     <div className="overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-indigo-700 via-blue-800 to-indigo-900 text-white shadow-xl shadow-indigo-500/10">
       <div className="p-4 border-b border-white/5 flex items-center justify-between bg-white/5">
-        <div className="flex items-center gap-2">
-          <Sparkles size={16} className="text-blue-300" />
-          <h3 className="font-bold text-[0.8125rem] uppercase tracking-wider text-blue-100">OTEN AI</h3>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <Sparkles size={16} className="text-blue-300" />
+            <h3 className="font-bold text-[0.8125rem] uppercase tracking-wider text-blue-100">OTEN AI</h3>
+          </div>
+          
+          {/* Auto-Explain Toggle */}
+          <button 
+            onClick={() => setAutoExplain(!autoExplain)}
+            className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full border transition-all text-[9px] font-black uppercase tracking-tighter ${
+              autoExplain 
+                ? 'bg-blue-400/20 border-blue-400/30 text-blue-300' 
+                : 'bg-white/5 border-white/10 text-white/40'
+            }`}
+          >
+            <div className={`w-1 h-1 rounded-full ${autoExplain ? 'bg-blue-300 animate-pulse' : 'bg-white/20'}`} />
+            Auto: {autoExplain ? 'ON' : 'OFF'}
+          </button>
         </div>
         <button
           onClick={fetchCommentary}
@@ -121,10 +146,22 @@ export default function AICommentary({
               key="error"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="flex items-start gap-3 text-xs text-blue-100 bg-red-500/10 p-3 rounded-xl border border-red-500/20"
+              className="flex flex-col items-center justify-center h-full text-center p-4"
             >
-              <AlertCircle size={14} className="text-red-300 shrink-0 mt-0.5" />
-              <p className="leading-relaxed">{error}</p>
+              <div className="w-12 h-12 rounded-full bg-orange-500/10 flex items-center justify-center mb-4 border border-orange-500/20">
+                <AlertCircle size={24} className="text-orange-400" />
+              </div>
+              <p className="text-[0.8125rem] leading-relaxed text-orange-100 font-medium max-w-[200px]">
+                {error.includes('Quota') 
+                  ? 'O treinador está descansando um pouco. Tente novamente em 30 segundos.' 
+                  : error}
+              </p>
+              <button 
+                onClick={fetchCommentary}
+                className="mt-6 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-xs font-bold transition-all border border-white/10"
+              >
+                Tentar agora
+              </button>
             </motion.div>
           ) : commentary ? (
             <motion.div

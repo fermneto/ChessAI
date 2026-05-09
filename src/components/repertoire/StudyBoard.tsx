@@ -429,61 +429,6 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
               </div>
             )}
 
-            {/* Branch Navigator (Breadcrumbs) */}
-            {getFullLineInfo(tree, currentNodeId).length > 0 && (
-              <div className="px-4 py-3 bg-neutral-50/50 border-b border-neutral-100 flex flex-wrap gap-2 items-center">
-                <button 
-                  onClick={() => resetBoard()}
-                  className="p-1.5 rounded-lg hover:bg-neutral-200 text-neutral-400 transition-colors"
-                  title="Início"
-                >
-                  <RotateCcw size={12} />
-                </button>
-                <ChevronRight size={10} className="text-neutral-300" />
-                {getFullLineInfo(tree, currentNodeId).map((step, idx) => (
-                  <div key={step.nodeId} className="flex items-center gap-1.5">
-                    <div className="flex items-center gap-1">
-                      <button
-                        onClick={() => {
-                          setCurrentNodeId(step.nodeId);
-                          gameRef.current = new Chess(tree.nodes[step.nodeId].fen);
-                          setFen(tree.nodes[step.nodeId].fen);
-                        }}
-                        className={`text-[11px] font-bold px-2 py-1 rounded-md transition-all ${
-                          idx === getFullLineInfo(tree, currentNodeId).length - 1
-                            ? 'bg-blue-600 text-white shadow-sm'
-                            : 'bg-white border border-neutral-200 text-neutral-600 hover:border-blue-300 hover:text-blue-600'
-                        }`}
-                      >
-                        {idx % 2 === 0 ? `${Math.floor(idx / 2) + 1}. ` : ''}{step.san}
-                      </button>
-                      
-                      {step.siblings.length > 0 && (
-                        <div className="flex gap-1">
-                          {step.siblings.map(sib => (
-                            <button
-                              key={sib.id}
-                              onClick={() => {
-                                setCurrentNodeId(sib.id);
-                                gameRef.current = new Chess(tree.nodes[sib.id].fen);
-                                setFen(tree.nodes[sib.id].fen);
-                              }}
-                              className="text-[9px] font-black w-5 h-5 flex items-center justify-center rounded-full bg-orange-100 text-orange-600 border border-orange-200 hover:bg-orange-600 hover:text-white transition-all"
-                              title={`Variante: ${sib.san}`}
-                            >
-                              +
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                    {idx < getFullLineInfo(tree, currentNodeId).length - 1 && (
-                      <ChevronRight size={10} className="text-neutral-300" />
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
             <div className="p-4 overflow-y-auto max-h-[300px]">
               {getPathToNode(tree, currentNodeId).length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-10 text-center opacity-40">
@@ -592,6 +537,74 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
           </div>
         </div>
       </div>
+
+      {/* Branch Navigator - Full Width below the grid */}
+      {getFullLineInfo(tree, currentNodeId).length > 0 && (
+        <div className="card-surface p-5 bg-neutral-50/50 border-dashed border-neutral-200 mt-2 animate-in fade-in slide-in-from-bottom-3">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <History size={16} className="text-blue-500" />
+              <h4 className="text-[11px] font-bold uppercase tracking-widest text-neutral-500">Linha do Estudo / Variantes</h4>
+            </div>
+            <div className="text-[10px] text-neutral-400 italic">
+              Clique nos lances ou nos botões "+" para navegar pelas ramificações
+            </div>
+          </div>
+          
+          <div className="flex flex-wrap gap-3 items-center">
+            <button 
+              onClick={() => resetBoard()}
+              className="p-2 rounded-xl hover:bg-neutral-200 text-neutral-400 transition-colors bg-white border border-neutral-100 shadow-sm"
+              title="Voltar ao início"
+            >
+              <RotateCcw size={14} />
+            </button>
+            <ChevronRight size={12} className="text-neutral-300" />
+            {getFullLineInfo(tree, currentNodeId).map((step, idx) => (
+              <div key={step.nodeId} className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => {
+                      setCurrentNodeId(step.nodeId);
+                      gameRef.current = new Chess(tree.nodes[step.nodeId].fen);
+                      setFen(tree.nodes[step.nodeId].fen);
+                    }}
+                    className={`text-[0.8125rem] font-bold px-3 py-1.5 rounded-xl transition-all ${
+                      idx === getFullLineInfo(tree, currentNodeId).length - 1
+                        ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
+                        : 'bg-white border border-neutral-200 text-neutral-600 hover:border-blue-300 hover:text-blue-600 shadow-sm'
+                    }`}
+                  >
+                    {idx % 2 === 0 ? `${Math.floor(idx / 2) + 1}. ` : ''}{step.san}
+                  </button>
+                  
+                  {step.siblings.length > 0 && (
+                    <div className="flex gap-1">
+                      {step.siblings.map(sib => (
+                        <button
+                          key={sib.id}
+                          onClick={() => {
+                            setCurrentNodeId(sib.id);
+                            gameRef.current = new Chess(tree.nodes[sib.id].fen);
+                            setFen(tree.nodes[sib.id].fen);
+                          }}
+                          className="text-[10px] font-black w-6 h-6 flex items-center justify-center rounded-full bg-orange-100 text-orange-600 border border-orange-200 hover:bg-orange-600 hover:text-white transition-all shadow-sm"
+                          title={`Variante: ${sib.san}`}
+                        >
+                          +
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                {idx < getFullLineInfo(tree, currentNodeId).length - 1 && (
+                  <ChevronRight size={12} className="text-neutral-300" />
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

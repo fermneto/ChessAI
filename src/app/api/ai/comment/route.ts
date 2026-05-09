@@ -73,6 +73,15 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ commentary: text });
   } catch (error: any) {
+    const isRateLimit = error.message?.includes('429') || error.status === 429;
+    
+    if (isRateLimit) {
+      return NextResponse.json({ 
+        error: "O treinador OTEN AI atingiu o limite de consultas gratuitas (Quota Exceeded). Por favor, aguarde um minuto antes de solicitar uma nova análise estratégica.",
+        isQuotaError: true
+      }, { status: 429 });
+    }
+
     console.error('AI Commentary Error Detail:', {
       message: error.message,
       stack: error.stack,
