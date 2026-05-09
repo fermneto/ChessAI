@@ -9,8 +9,6 @@ import clsx from 'clsx';
 const navLinks = [
   { label: 'Recursos', href: '#features' },
   { label: 'Como funciona', href: '#how-it-works' },
-  { label: 'Preços', href: '#pricing' },
-  { label: 'Blog', href: '/blog' },
 ];
 
 export default function Navbar() {
@@ -34,46 +32,48 @@ export default function Navbar() {
         )}
       >
         <div className="container-app">
-          <nav className="flex items-center justify-between h-16">
-            {/* Logo */}
-            <Link
-              href="/"
-              className="flex items-center gap-2.5 group"
-              aria-label="ChessAI Home"
-            >
-              <div className="w-8 h-8 rounded-lg bg-neutral-900 flex items-center justify-center">
-                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                  <path d="M9 2L11 7H16L12 10.5L13.5 16L9 13L4.5 16L6 10.5L2 7H7L9 2Z" fill="white" opacity="0.9"/>
-                </svg>
-              </div>
-              <span className="font-semibold text-neutral-900 tracking-tight text-lg">
-                Chess<span className="text-brand-500">AI</span>
-              </span>
-            </Link>
-
-            {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center gap-6">
-              {navLinks.map((link) => (
+            <nav className="flex items-center h-16">
+              {/* Logo - Column 1 */}
+              <div className="flex-1 flex justify-start">
                 <Link
-                  key={link.href}
-                  href={link.href}
-                  className="nav-link"
+                  href="/"
+                  className="flex items-center gap-2.5 group"
+                  aria-label="ChessAI Home"
                 >
-                  {link.label}
+                  <div className="w-8 h-8 rounded-lg bg-neutral-900 flex items-center justify-center">
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                      <path d="M9 2L11 7H16L12 10.5L13.5 16L9 13L4.5 16L6 10.5L2 7H7L9 2Z" fill="white" opacity="0.9"/>
+                    </svg>
+                  </div>
+                  <span className="font-semibold text-neutral-900 tracking-tight text-lg">
+                    Chess<span className="text-brand-500">AI</span>
+                  </span>
                 </Link>
-              ))}
-            </div>
+              </div>
 
-            {/* CTA Buttons */}
-            <div className="hidden md:flex items-center gap-3">
-              <Link href="/auth/login" className="btn btn-ghost btn-sm">
-                Entrar
-              </Link>
-              <Link href="/auth/signup" className="btn btn-primary btn-sm gap-1.5">
-                Começar grátis
-                <ChevronRight size={14} strokeWidth={2.5} />
-              </Link>
-            </div>
+              {/* Desktop Navigation - Column 2 (Centered) */}
+              <div className="hidden md:flex items-center gap-8 px-4">
+                {navLinks.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className="nav-link"
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
+
+              {/* CTA Buttons - Column 3 */}
+              <div className="hidden md:flex-1 md:flex items-center justify-end gap-3">
+                <Link href="/auth/login" className="btn btn-ghost btn-sm">
+                  Entrar
+                </Link>
+                <Link href="/auth/signup" className="btn btn-primary btn-sm gap-1.5 font-bold">
+                  Começar grátis
+                  <ChevronRight size={14} strokeWidth={2.5} />
+                </Link>
+              </div>
 
             {/* Mobile Menu Toggle */}
             <button

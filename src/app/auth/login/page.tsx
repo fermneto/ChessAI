@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { Eye, EyeOff, ArrowLeft, Mail, Lock, Chrome } from 'lucide-react';
+import { Eye, EyeOff, ArrowLeft, Mail, Lock, Globe } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 
@@ -109,7 +109,7 @@ export default function LoginPage() {
             {googleLoading ? (
               <div className="w-4 h-4 border-2 border-neutral-300 border-t-neutral-600 rounded-full animate-spin" />
             ) : (
-              <Chrome size={18} className="text-neutral-600" />
+              <Globe size={18} className="text-neutral-600" />
             )}
             Continuar com Google
           </button>
@@ -136,7 +136,7 @@ export default function LoginPage() {
                   placeholder="seu@email.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="input-field pl-10"
+                  className="input-field !pl-10"
                 />
               </div>
             </div>
@@ -160,7 +160,7 @@ export default function LoginPage() {
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="input-field pl-10 pr-10"
+                  className="input-field !pl-10 pr-10"
                 />
                 <button
                   type="button"

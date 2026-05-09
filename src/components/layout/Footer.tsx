@@ -1,16 +1,14 @@
 import Link from 'next/link';
-import { Twitter, Github, Linkedin, Mail } from 'lucide-react';
+import { Mail, X, Globe } from 'lucide-react';
 
 const footerLinks = {
   produto: [
     { label: 'Recursos', href: '#features' },
     { label: 'Como funciona', href: '#how-it-works' },
-    { label: 'Preços', href: '#pricing' },
     { label: 'Roadmap', href: '/roadmap' },
   ],
   empresa: [
     { label: 'Sobre nós', href: '/about' },
-    { label: 'Blog', href: '/blog' },
     { label: 'Carreiras', href: '/careers' },
     { label: 'Contato', href: '/contact' },
   ],
@@ -22,23 +20,23 @@ const footerLinks = {
 };
 
 const socialLinks = [
-  { icon: Twitter, href: 'https://twitter.com/chessai', label: 'Twitter' },
-  { icon: Github, href: 'https://github.com/chessai', label: 'GitHub' },
-  { icon: Linkedin, href: 'https://linkedin.com/company/chessai', label: 'LinkedIn' },
+  { icon: X, href: 'https://twitter.com/chessai', label: 'Twitter' },
+  { icon: Globe, href: 'https://github.com/chessai', label: 'GitHub' },
+  { icon: Globe, href: 'https://linkedin.com/company/chessai', label: 'LinkedIn' },
   { icon: Mail, href: 'mailto:hello@chessai.app', label: 'Email' },
 ];
 
 export default function Footer() {
   return (
-    <footer className="bg-neutral-900 text-white">
-      <div className="container-app py-16">
+    <footer className="bg-slate-950 text-white border-t border-white/5 pt-24 pb-16">
+      <div className="container-app">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12">
           {/* Brand */}
           <div className="lg:col-span-2">
             <Link href="/" className="flex items-center gap-2.5 mb-4">
               <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                  <path d="M9 2L11 7H16L12 10.5L13.5 16L9 13L4.5 16L6 10.5L2 7H7L9 2Z" fill="white" opacity="0.9"/>
+                  <path d="M9 2L11 7H16L12 10.5L13.5 16L9 13L4.5 16L6 10.5L2 7H7L9 2Z" fill="white" opacity="0.9" />
                 </svg>
               </div>
               <span className="font-semibold text-white text-lg">ChessAI</span>
@@ -48,16 +46,19 @@ export default function Footer() {
               pedagógica personalizada para seu estilo de jogo.
             </p>
             <div className="flex items-center gap-3 mt-6">
-              {socialLinks.map(({ icon: Icon, href, label }) => (
-                <a
-                  key={label}
-                  href={href}
-                  aria-label={label}
-                  className="w-9 h-9 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors"
-                >
-                  <Icon size={16} className="text-neutral-400" />
-                </a>
-              ))}
+              {socialLinks.map(({ icon: Icon, href, label }) => {
+                if (!Icon) return null;
+                return (
+                  <a
+                    key={label}
+                    href={href}
+                    aria-label={label}
+                    className="w-9 h-9 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors"
+                  >
+                    <Icon size={16} className="text-neutral-400" />
+                  </a>
+                );
+              })}
             </div>
           </div>
 

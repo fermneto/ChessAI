@@ -411,12 +411,12 @@ body {
 }
 
 .section-padding {
-  padding: 5rem 0;
+  padding: 3.5rem 0;
 }
 
 @media (min-width: 768px) {
   .section-padding {
-    padding: 8rem 0;
+    padding: 5rem 0;
   }
 }
 
