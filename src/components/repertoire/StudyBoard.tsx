@@ -319,7 +319,7 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
           </div>
 
           <div
-            className="aspect-square w-full max-w-[600px] mx-auto bg-white p-2.5 rounded-2xl shadow-large border border-neutral-100 relative"
+            className="aspect-square w-full max-w-[600px] mx-auto bg-white p-2.5 rounded-2xl shadow-large border border-neutral-100 relative z-0"
           >
             {!isMounted ? (
               <div className="w-full aspect-square bg-neutral-50 animate-pulse rounded-xl flex items-center justify-center">
