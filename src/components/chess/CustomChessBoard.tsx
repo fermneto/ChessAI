@@ -9,6 +9,8 @@ interface Props {
   boardOrientation?: 'white' | 'black';
   selectedSquare?: string | null;
   lastMove?: string | null;
+  legalMoves?: string[];
+  checkSquare?: string | null;
 }
 
 const PIECE_IMAGES: Record<string, string> = {
@@ -31,7 +33,9 @@ export default function CustomChessBoard({
   onSquareClick, 
   boardOrientation = 'white',
   selectedSquare,
-  lastMove 
+  lastMove,
+  legalMoves = [],
+  checkSquare = null
 }: Props) {
   
   const board = useMemo(() => {
@@ -59,11 +63,10 @@ export default function CustomChessBoard({
     const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
     const ranks = ['8', '7', '6', '5', '4', '3', '2', '1'];
 
-    const actualRanks = boardOrientation === 'white' ? ranks : [...ranks].reverse();
-    const actualFiles = boardOrientation === 'white' ? files : [...files].reverse();
-
+    // Para o grid de quadrados, percorremos sempre a mesma ordem visual (8x8)
     for (let i = 0; i < 8; i++) {
       for (let j = 0; j < 8; j++) {
+        // Mas o nome da casa (ex: 'e4') muda conforme a orientação
         const rankIdx = boardOrientation === 'white' ? i : 7 - i;
         const fileIdx = boardOrientation === 'white' ? j : 7 - j;
         
@@ -75,8 +78,8 @@ export default function CustomChessBoard({
           name: squareName,
           piece,
           isDark,
-          row: i,
-          col: j
+          visualRow: i,
+          visualCol: j
         });
       }
     }
@@ -144,6 +147,9 @@ export default function CustomChessBoard({
       <div className="absolute inset-0 grid grid-cols-8 grid-rows-8">
         {squares.map((sq) => {
           const isLastMove = lastMove && (sq.name === lastMove.slice(-2) || sq.name === lastMove.slice(0, 2));
+          const isLegalMove = legalMoves?.includes(sq.name);
+          const isCheck = checkSquare === sq.name;
+          
           return (
             <div
               key={sq.name}
@@ -153,6 +159,7 @@ export default function CustomChessBoard({
                 ${sq.isDark ? 'bg-[#64748b]' : 'bg-[#e2e8f0]'}
                 ${selectedSquare === sq.name ? 'after:absolute after:inset-0 after:bg-yellow-400/40 after:z-10' : ''}
                 ${isLastMove ? 'after:absolute after:inset-0 after:bg-blue-500/30 after:z-0' : ''}
+                ${isCheck ? 'after:absolute after:inset-0 after:bg-red-500/50 after:shadow-[inset_0_0_20px_rgba(255,0,0,0.5)] after:z-10' : ''}
               `}
             >
               {/* Coordenadas */}
@@ -204,6 +211,48 @@ export default function CustomChessBoard({
             />
           </motion.div>
         ))}
+      </div>
+
+      {/* Camada 3: Indicadores de Lances Legais (Sobre as peças para capturas) */}
+      <div className="absolute inset-0 pointer-events-none z-40">
+        {legalMoves?.map((sqName) => {
+          // Encontrar as coordenadas visuais da casa
+          const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+          const ranks = ['8', '7', '6', '5', '4', '3', '2', '1'];
+          
+          const fileIdx = files.indexOf(sqName[0]);
+          const rankIdx = ranks.indexOf(sqName[1]);
+          
+          const visualRow = boardOrientation === 'white' ? rankIdx : 7 - rankIdx;
+          const visualCol = boardOrientation === 'white' ? fileIdx : 7 - fileIdx;
+
+          // Verificar se tem peça na casa para decidir entre Bolinha ou Anel
+          const hasPiece = board[rankIdx][fileIdx] !== null;
+
+          return (
+            <div
+              key={`legal-${sqName}`}
+              style={{
+                position: 'absolute',
+                width: '12.5%',
+                height: '12.5%',
+                left: `${visualCol * 12.5}%`,
+                top: `${visualRow * 12.5}%`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              {hasPiece ? (
+                // Anel para capturas
+                <div className="w-[85%] h-[85%] border-[6px] border-black/10 rounded-full" />
+              ) : (
+                // Bolinha para casas vazias
+                <div className="w-4 h-4 bg-black/10 rounded-full" />
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );

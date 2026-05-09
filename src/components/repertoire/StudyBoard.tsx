@@ -7,6 +7,7 @@ import {
   ChevronLeft, 
   ChevronRight, 
   RotateCcw, 
+  RefreshCw,
   Save, 
   Play, 
   Settings,
@@ -34,7 +35,15 @@ export default function StudyBoard({ repertoire, onUpdate }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastMove, setLastMove] = useState<string | null>(null);
-  const [debug, setDebug] = useState<string | null>(null);
+  const [debug, setDebug] = useState('');
+  const [orientation, setOrientation] = useState<'white' | 'black'>('white');
+  const [legalMoves, setLegalMoves] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (repertoire?.color) {
+      setOrientation(repertoire.color as 'white' | 'black');
+    }
+  }, [repertoire]);
   const [selectedSquare, setSelectedSquare] = useState<string | null>(null);
 
   const supabase = createClient();
@@ -61,35 +70,35 @@ export default function StudyBoard({ repertoire, onUpdate }: Props) {
     gameRef.current = new Chess('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
   }
 
-  function onSquareClick(square: string) {
-    const piece = gameRef.current.get(square as any);
-    setDebug(`Clique: ${square} | Turno: ${gameRef.current.turn()}`);
-
+  const onSquareClick = (square: string) => {
+    // Se já temos uma casa selecionada, tentamos fazer o lance
     if (selectedSquare) {
-      try {
-        const move = gameRef.current.move({
-          from: selectedSquare,
-          to: square,
-          promotion: 'q',
-        });
-
-        if (move) {
-          setHistory(prev => [...prev, move.san]);
-          setLastMove(move.from + move.to);
-          setError(null);
-          setSelectedSquare(null);
-          forceUpdate();
-          return;
-        }
-      } catch (e) {
-        setError('Lance ilegal');
-      }
-      setSelectedSquare(piece ? square : null);
-    } else {
-      if (piece) {
-        setSelectedSquare(square);
+      const move = onDrop(selectedSquare, square);
+      if (move) {
+        setSelectedSquare(null);
+        setLegalMoves([]);
         setError(null);
+        return;
       }
+    }
+
+    // Se clicou na mesma casa, deseleciona
+    if (selectedSquare === square) {
+      setSelectedSquare(null);
+      setLegalMoves([]);
+      return;
+    }
+
+    // Tentar selecionar uma peça e calcular lances legais
+    const piece = gameRef.current.get(square as any);
+    if (piece) {
+      setSelectedSquare(square);
+      const moves = gameRef.current.moves({ square: square as any, verbose: true });
+      setLegalMoves(moves.map(m => m.to));
+      setError(null);
+    } else {
+      setSelectedSquare(null);
+      setLegalMoves([]);
     }
     forceUpdate();
   }
@@ -184,9 +193,22 @@ export default function StudyBoard({ repertoire, onUpdate }: Props) {
               <CustomChessBoard
                 position={gameRef.current.fen()}
                 onSquareClick={onSquareClick}
-                boardOrientation={repertoire.color}
+                boardOrientation={orientation}
                 selectedSquare={selectedSquare}
                 lastMove={lastMove}
+                legalMoves={legalMoves}
+                checkSquare={gameRef.current.inCheck() ? (() => {
+                  const board = gameRef.current.board();
+                  for (let i = 0; i < 8; i++) {
+                    for (let j = 0; j < 8; j++) {
+                      const p = board[i][j];
+                      if (p && p.type === 'k' && p.color === gameRef.current.turn()) {
+                        return String.fromCharCode(97 + j) + (8 - i);
+                      }
+                    }
+                  }
+                  return null;
+                })() : null}
               />
             )}
             {error && (
@@ -196,53 +218,18 @@ export default function StudyBoard({ repertoire, onUpdate }: Props) {
             )}
           </div>
 
-          {/* Manual Move Input for Diagnosis */}
-          <div className="bg-white p-3 rounded-2xl shadow-soft border border-neutral-100 flex gap-3 items-center">
-            <div className="flex-1 relative">
-              <input 
-                type="text" 
-                placeholder="Digite um lance (ex: e4)"
-                className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    const val = (e.target as HTMLInputElement).value;
-                    
-                    // Teste de Força Bruta para e4
-                    if (val.toLowerCase() === 'e4') {
-                      gameRef.current = new Chess('rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1');
-                      setHistory(['e4']);
-                      setError(null);
-                      setDebug('FORÇADO: e4');
-                      forceUpdate();
-                      (e.target as HTMLInputElement).value = '';
-                      return;
-                    }
-
-                    try {
-                      const move = gameRef.current.move(val);
-                      if (move) {
-                        setHistory(prev => [...prev, move.san]);
-                        setLastMove(move.from + move.to);
-                        (e.target as HTMLInputElement).value = '';
-                        setError(null);
-                        setDebug(`Manual: ${move.san}`);
-                        forceUpdate();
-                      }
-                    } catch (err) {
-                      setError('Lance inválido');
-                    }
-                  }
-                }}
-              />
-            </div>
-            <div className="px-3 py-2 bg-blue-50 text-blue-600 rounded-lg text-[10px] font-bold uppercase tracking-wider">
-              Modo Texto
-            </div>
-          </div>
 
           {/* Board Controls */}
           <div className="flex items-center justify-between px-2">
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1 bg-white p-1 rounded-2xl shadow-sm border border-neutral-100">
+              <button 
+                onClick={() => setOrientation(prev => prev === 'white' ? 'black' : 'white')}
+                className="p-2.5 rounded-xl hover:bg-neutral-100 text-neutral-500 transition-colors"
+                title="Girar Tabuleiro"
+              >
+                <RotateCcw size={18} className={orientation === 'black' ? 'rotate-180' : ''} />
+              </button>
+              <div className="w-[1px] h-6 bg-neutral-100 mx-1" />
               <button 
                 onClick={undoMove}
                 disabled={history.length === 0}
@@ -257,7 +244,7 @@ export default function StudyBoard({ repertoire, onUpdate }: Props) {
                 className="p-2.5 rounded-xl hover:bg-neutral-100 text-neutral-500 disabled:opacity-30 transition-colors"
                 title="Reiniciar"
               >
-                <RotateCcw size={18} />
+                <RefreshCw size={18} />
               </button>
             </div>
 
