@@ -61,6 +61,8 @@ export interface Database {
           color: 'white' | 'black';
           opening_name: string | null;
           eco_code: string | null;
+          total_study_time: number;
+          total_moves_studied: number;
           moves: Json;
           is_public: boolean;
           tags: string[];
@@ -75,6 +77,8 @@ export interface Database {
           color: 'white' | 'black';
           opening_name?: string | null;
           eco_code?: string | null;
+          total_study_time?: number;
+          total_moves_studied?: number;
           moves?: Json;
           is_public?: boolean;
           tags?: string[];
@@ -89,6 +93,8 @@ export interface Database {
           color?: 'white' | 'black';
           opening_name?: string | null;
           eco_code?: string | null;
+          total_study_time?: number;
+          total_moves_studied?: number;
           moves?: Json;
           is_public?: boolean;
           tags?: string[];

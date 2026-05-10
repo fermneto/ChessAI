@@ -13,7 +13,8 @@ import {
   History,
   Brain,
   Zap,
-  Book
+  Book,
+  Clock
 } from 'lucide-react';
 import { useStockfish } from '@/hooks/useStockfish';
 import { lookupOpening } from '@/lib/chess/openingDatabase';
@@ -62,6 +63,8 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
   const [orientation, setOrientation] = useState<'white' | 'black'>('white');
   const [legalMoves, setLegalMoves] = useState<string[]>([]);
   const [engineEnabled, setEngineEnabled] = useState(false);
+  const [sessionSeconds, setSessionSeconds] = useState(0);
+  const [sessionMoves, setSessionMoves] = useState(0);
   const [manualArrows, setManualArrows] = useState<any[]>([]);
   const [currentOpening, setCurrentOpening] = useState<string | null>(null);
   const [selectedSquare, setSelectedSquare] = useState<string | null>(null);
@@ -75,6 +78,20 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
 
   const forceUpdate = useCallback(() => setRenderTick(t => t + 1), []);
   const supabase = createClient();
+
+  // Contador de tempo de estudo
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setSessionSeconds(s => s + 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const formatTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  };
 
   // Calcular a porcentagem da barra de vantagem
   const getEvalPercentage = () => {
@@ -184,13 +201,14 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
         return;
       }
     }
+
     if (selectedSquare === square) {
       setSelectedSquare(null);
       setLegalMoves([]);
       return;
     }
     const piece = gameRef.current.get(square as any);
-    if (piece) {
+    if (piece && piece.color === gameRef.current.turn()) {
       setSelectedSquare(square);
       const moves = gameRef.current.moves({ square: square as any, verbose: true });
       setLegalMoves(moves.map(m => m.to));
@@ -217,6 +235,7 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
         setCurrentNodeId(nodeId);
         setFen(newFen);
         setLastMove(move.from + move.to);
+        setSessionMoves(prev => prev + 1);
         forceUpdate();
         return true;
       }
@@ -258,6 +277,8 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
           activeNodeId: currentNodeId,
         },
         updated_at: new Date().toISOString(),
+        total_study_time: (repertoire.total_study_time || 0) + sessionSeconds,
+        total_moves_studied: (repertoire.total_moves_studied || 0) + sessionMoves
       })
       .eq('id', repertoire.id)
       .select()
@@ -266,6 +287,8 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
     if (updateError) {
       setError('Erro ao salvar: ' + updateError.message);
     } else if (data) {
+      setSessionSeconds(0);
+      setSessionMoves(0);
       if (onUpdate) onUpdate(data);
     }
     setLoading(false);
@@ -274,7 +297,7 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
   return (
     <div className="flex flex-col gap-6">
       <div className="grid lg:grid-cols-12 gap-6">
-        <div className="lg:col-span-7 flex flex-col gap-4">
+        <div className="lg:col-span-7 flex flex-col gap-2">
           <div className="bg-white p-3 rounded-2xl shadow-sm border border-neutral-100 flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <button
@@ -361,50 +384,64 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
             )}
           </div>
 
-          <div className="flex items-center justify-between px-2">
-            <div className="flex items-center gap-1 bg-white p-1 rounded-2xl shadow-sm border border-neutral-100">
+          <div className="flex items-center justify-between mt-1 pt-2 border-t border-neutral-50 gap-3 max-w-[600px] mx-auto">
+            {/* Nav Controls - Compact */}
+            <div className="flex items-center bg-neutral-50 p-1 rounded-xl border border-neutral-100">
               <button 
-                onClick={() => setOrientation(prev => prev === 'white' ? 'black' : 'white')}
-                className="p-2.5 rounded-xl hover:bg-neutral-100 text-neutral-500 transition-colors"
-                title="Girar Tabuleiro"
+                onClick={() => {
+                  gameRef.current.reset();
+                  setFen(gameRef.current.fen());
+                  setCurrentNodeId(tree.rootId);
+                  setLastMove(null);
+                  forceUpdate();
+                }}
+                className="p-2 rounded-lg hover:bg-white hover:shadow-sm text-neutral-400 hover:text-neutral-600 transition-all"
+                title="Reiniciar"
               >
-                <RotateCcw size={18} className={orientation === 'black' ? 'rotate-180' : ''} />
+                <RotateCcw size={16} />
               </button>
-              <div className="w-[1px] h-6 bg-neutral-100 mx-1" />
+              <div className="w-px h-3 bg-neutral-200 mx-0.5" />
               <button 
                 onClick={undoMove}
                 disabled={currentNodeId === tree.rootId}
-                className="p-2.5 rounded-xl hover:bg-neutral-100 text-neutral-500 disabled:opacity-30 transition-colors"
-                title="Desfazer"
+                className="p-2 rounded-lg hover:bg-white hover:shadow-sm text-neutral-400 hover:text-neutral-600 disabled:opacity-20 transition-all"
+                title="Voltar"
               >
-                <ChevronLeft size={20} />
+                <ChevronLeft size={18} />
               </button>
               <button 
                 onClick={resetBoard}
                 disabled={currentNodeId === tree.rootId}
-                className="p-2.5 rounded-xl hover:bg-neutral-100 text-neutral-500 disabled:opacity-30 transition-colors"
-                title="Reiniciar"
+                className="p-2 rounded-lg hover:bg-white hover:shadow-sm text-neutral-400 hover:text-neutral-600 disabled:opacity-20 transition-all"
+                title="Início"
               >
-                <RefreshCw size={18} />
+                <RefreshCw size={16} />
               </button>
             </div>
 
-            <div className="flex items-center gap-2">
-              <button
-                onClick={saveRepertoire}
-                disabled={loading}
-                className="btn btn-primary btn-md gap-2 shadow-md shadow-blue-500/10"
-              >
-                {loading ? (
-                  <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                ) : (
-                  <>
-                    <Save size={16} />
-                    Salvar progresso
-                  </>
-                )}
-              </button>
+            {/* Session Timer - Compact Inline */}
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 border border-blue-100 text-blue-600 text-[11px] font-bold shadow-sm">
+              <Clock size={12} className="animate-pulse" />
+              <span className="uppercase tracking-tight opacity-60">Sessão:</span>
+              <span className="tabular-nums">{formatTime(sessionSeconds)}</span>
             </div>
+
+            {/* Save Button - Adjusted Size */}
+            <button
+              onClick={saveRepertoire}
+              disabled={loading}
+              className="btn btn-primary h-10 px-5 text-sm gap-2 shadow-lg shadow-blue-500/20"
+            >
+              {loading ? (
+                <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+              ) : (
+                <>
+                  <Save size={15} />
+                  <span className="hidden xs:inline">Salvar progresso</span>
+                  <span className="xs:hidden">Salvar</span>
+                </>
+              )}
+            </button>
           </div>
         </div>
 

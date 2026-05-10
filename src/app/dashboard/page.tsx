@@ -20,7 +20,7 @@ export default async function DashboardPage() {
 
   const userName = user.user_metadata?.full_name?.split(' ')[0] ?? 'Jogador';
 
-  // Fetch repertoires
+  // 1. Fetch repertoires
   const { data, error } = await supabase
     .from('repertoires')
     .select('*')
@@ -34,11 +34,30 @@ export default async function DashboardPage() {
   const repertoires = (data as Repertoire[] | null) ?? [];
   const repCount = repertoires.length;
 
+  // 2. Fetch Daily Tip (Server Side)
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  let dailyTip = { title: "Abertura Italiana", content: "Desenvolva o bispo para c4 visando o ponto fraco f7. É uma das aberturas mais sólidas para iniciantes e mestres." };
+  
+  try {
+    const tipRes = await fetch(`${baseUrl}/api/ai/tip`, { next: { revalidate: 3600 } });
+    if (tipRes.ok) {
+      dailyTip = await tipRes.json();
+    }
+  } catch (err) {
+    console.error("Erro ao buscar dica:", err);
+  }
+
+  // 3. Calculate total study stats
+  const totalSeconds = repertoires.reduce((acc, rep) => acc + (rep.total_study_time || 0), 0);
+  const totalMoves = repertoires.reduce((acc, rep) => acc + (rep.total_moves_studied || 0), 0);
+  const totalMinutes = Math.floor(totalSeconds / 60);
+  const totalHours = (totalSeconds / 3600).toFixed(1);
+
   const stats = [
     { label: 'Repertórios', value: String(repCount), icon: BookOpen, trend: null },
     { label: 'Treinos realizados', value: '0', icon: Target, trend: null },
-    { label: 'Lances estudados', value: '0', icon: BarChart3, trend: null },
-    { label: 'Minutos de estudo', value: '0', icon: Clock, trend: null },
+    { label: 'Lances estudados', value: String(totalMoves), icon: BarChart3, trend: null },
+    { label: 'Tempo total', value: totalSeconds > 3600 ? `${totalHours}h` : `${totalMinutes}m`, icon: Clock, trend: null },
   ];
 
   const formatDate = (dateStr: string) => {
@@ -46,6 +65,14 @@ export default async function DashboardPage() {
       day: '2-digit',
       month: 'short',
     });
+  };
+
+  const formatStudyTime = (seconds: number) => {
+    if (!seconds) return '0m';
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    if (h > 0) return `${h}h ${m}m`;
+    return `${m}m`;
   };
 
   return (
@@ -172,11 +199,19 @@ export default async function DashboardPage() {
                       </p>
                     </div>
 
-                    {/* Date + arrow */}
-                    <div className="flex items-center gap-3 flex-shrink-0">
-                      <span className="text-xs text-neutral-300 hidden sm:block">
-                        {formatDate(rep.updated_at)}
-                      </span>
+                    {/* Date + time + arrow */}
+                    <div className="flex items-center gap-4 flex-shrink-0">
+                      <div className="hidden sm:flex flex-col items-end gap-0.5">
+                        <span className="text-[10px] font-bold text-neutral-300 uppercase tracking-widest">
+                          {formatDate(rep.updated_at)}
+                        </span>
+                        <div className="flex items-center gap-1 text-blue-500/50">
+                          <Clock size={10} />
+                          <span className="text-[10px] font-bold">
+                            {formatStudyTime(rep.total_study_time || 0)}
+                          </span>
+                        </div>
+                      </div>
                       <ChevronRight size={14} className="text-neutral-300 group-hover:text-neutral-500 transition-colors" />
                     </div>
                   </Link>
@@ -213,11 +248,16 @@ export default async function DashboardPage() {
 
             <div className="card-surface p-6">
               <h2 className="font-semibold text-neutral-900 mb-2">Dica do dia</h2>
-              <p className="text-body text-sm">
-                <strong className="text-neutral-700">Abertura Italiana:</strong>{' '}
-                Após 1.e4 e5 2.Nf3 Nc6 3.Bc4, o objetivo branco é controlar o
-                centro e criar pressão em f7. Explore a variante Giuoco Piano!
+              <p className="text-body text-sm leading-relaxed">
+                <strong className="text-neutral-700">{dailyTip.title}:</strong>{' '}
+                {dailyTip.content}
               </p>
+              <div className="mt-4 pt-4 border-t border-neutral-100 flex items-center justify-between">
+                <span className="text-[10px] font-bold text-neutral-300 uppercase tracking-widest">
+                  Gerado por IA
+                </span>
+                <TrendingUp size={12} className="text-blue-400" />
+              </div>
             </div>
           </div>
         </div>

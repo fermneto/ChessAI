@@ -15,6 +15,8 @@ import {
   Globe,
   Lock,
   MoreHorizontal,
+  Clock,
+  BarChart3,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import type { Database } from '@/types/database';
@@ -377,6 +379,28 @@ export default function RepertoireDetail({ repertoire: initial }: Props) {
                   <span className="text-neutral-500">Atualizado:</span>
                   <span className="text-neutral-800 font-medium ml-auto">
                     {formatDate(repertoire.updated_at)}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-3 text-sm">
+                  <Clock size={15} className="text-blue-400 flex-shrink-0" />
+                  <span className="text-neutral-500">Tempo de estudo:</span>
+                  <span className="text-blue-600 font-bold ml-auto">
+                    {(() => {
+                      const seconds = repertoire.total_study_time || 0;
+                      const h = Math.floor(seconds / 3600);
+                      const m = Math.floor((seconds % 3600) / 60);
+                      if (h > 0) return `${h}h ${m}m`;
+                      return `${m}m`;
+                    })()}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-3 text-sm">
+                  <BarChart3 size={15} className="text-emerald-400 flex-shrink-0" />
+                  <span className="text-neutral-500">Lances estudados:</span>
+                  <span className="text-emerald-600 font-bold ml-auto">
+                    {repertoire.total_moves_studied || 0}
                   </span>
                 </div>
               </div>
