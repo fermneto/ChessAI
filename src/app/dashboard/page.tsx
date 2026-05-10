@@ -34,7 +34,13 @@ export default async function DashboardPage() {
   const repertoires = (data as Repertoire[] | null) ?? [];
   const repCount = repertoires.length;
 
-  // 2. Fetch Daily Tip (Server Side)
+  // 2. Fetch training sessions count
+  const { count: trainingCount } = await supabase
+    .from('training_sessions')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', user.id);
+
+  // 3. Fetch Daily Tip (Server Side)
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
   let dailyTip = { title: "Abertura Italiana", content: "Desenvolva o bispo para c4 visando o ponto fraco f7. É uma das aberturas mais sólidas para iniciantes e mestres." };
   
@@ -47,7 +53,7 @@ export default async function DashboardPage() {
     console.error("Erro ao buscar dica:", err);
   }
 
-  // 3. Calculate total study stats
+  // 4. Calculate total study stats
   const totalSeconds = repertoires.reduce((acc, rep) => acc + (rep.total_study_time || 0), 0);
   const totalMoves = repertoires.reduce((acc, rep) => acc + (rep.total_moves_studied || 0), 0);
   const totalMinutes = Math.floor(totalSeconds / 60);
@@ -55,7 +61,7 @@ export default async function DashboardPage() {
 
   const stats = [
     { label: 'Repertórios', value: String(repCount), icon: BookOpen, trend: null },
-    { label: 'Treinos realizados', value: '0', icon: Target, trend: null },
+    { label: 'Treinos realizados', value: String(trainingCount || 0), icon: Target, trend: null },
     { label: 'Lances estudados', value: String(totalMoves), icon: BarChart3, trend: null },
     { label: 'Tempo total', value: totalSeconds > 3600 ? `${totalHours}h` : `${totalMinutes}m`, icon: Clock, trend: null },
   ];

@@ -209,7 +209,7 @@ export default function CustomChessBoard({
           const isLastMove = lastMove && (sq.name === lastMove.slice(-2) || sq.name === lastMove.slice(0, 2));
           const isLegalMove = legalMoves?.includes(sq.name);
           const isCheck = checkSquare === sq.name;
-          const isManualCircle = manualArrows.some(a => a.from === sq.name && a.to === sq.name);
+          const manualCircle = manualArrows.find(a => a.from === sq.name && a.to === sq.name);
           
           return (
             <div
@@ -226,8 +226,11 @@ export default function CustomChessBoard({
               `}
             >
               {/* Destaque Manual (Círculo) */}
-              {isManualCircle && (
-                <div className="absolute inset-0 z-30 pointer-events-none border-[6px] border-amber-400/50 rounded-full" />
+              {manualCircle && (
+                <div 
+                  className="absolute inset-0 z-30 pointer-events-none border-[6px] rounded-full" 
+                  style={{ borderColor: manualCircle.color || 'rgba(251, 191, 36, 0.5)' }}
+                />
               )}
               {/* Coordenadas */}
               {sq.name.startsWith(boardOrientation === 'white' ? 'a' : 'h') && (

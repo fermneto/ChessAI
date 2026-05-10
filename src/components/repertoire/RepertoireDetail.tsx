@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import {
   Pencil,
   Trash2,
@@ -17,6 +18,7 @@ import {
   MoreHorizontal,
   Clock,
   BarChart3,
+  Target,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import type { Database } from '@/types/database';
@@ -439,6 +441,13 @@ export default function RepertoireDetail({ repertoire: initial }: Props) {
             <div className="card-surface p-5">
               <h3 className="font-semibold text-neutral-900 mb-3 text-sm">Ações</h3>
               <div className="space-y-1.5">
+                <Link
+                  href={`/train/${repertoire.id}`}
+                  className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-lg text-sm text-orange-600 bg-orange-50 hover:bg-orange-100 transition-colors font-bold"
+                >
+                  <Target size={14} />
+                  Iniciar Treino (Puzzles)
+                </Link>
                 <button
                   onClick={startEditing}
                   className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-lg text-sm text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 transition-colors"
