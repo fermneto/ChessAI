@@ -12,11 +12,13 @@ export default async function TrainSelectionPage() {
 
   if (!user) redirect('/auth/login');
 
-  const { data: repertoires } = await supabase
+  const { data } = await supabase
     .from('repertoires')
     .select('*')
     .eq('user_id', user.id)
     .order('updated_at', { ascending: false });
+
+  const repertoires = (data as any[]) || [];
 
   return (
     <div className="min-h-screen bg-neutral-50">
