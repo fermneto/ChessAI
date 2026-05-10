@@ -2,12 +2,14 @@ import { createClient } from '@/lib/supabase/server';
 import { redirect, notFound } from 'next/navigation';
 import { ChevronLeft, Target } from 'lucide-react';
 import Link from 'next/link';
-import TrainingSession from '@/components/training/TrainingSession';
+import TrainingSession from '../../../components/training/TrainingSession';
+import { isValidUUID } from '@/lib/utils/security';
 
 type Props = { params: Promise<{ id: string }> };
 
 export default async function TrainingPage({ params }: Props) {
   const { id } = await params;
+  if (!isValidUUID(id)) notFound();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -17,6 +19,7 @@ export default async function TrainingPage({ params }: Props) {
     .from('repertoires')
     .select('*')
     .eq('id', id)
+    .eq('user_id', user.id)
     .single();
 
   if (error || !data) notFound();

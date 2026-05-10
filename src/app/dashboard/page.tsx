@@ -19,41 +19,42 @@ export default async function DashboardPage() {
   if (!user) redirect('/auth/login');
 
   const userName = user.user_metadata?.full_name?.split(' ')[0] ?? 'Jogador';
-
-  // 1. Fetch repertoires
-  const { data, error } = await supabase
-    .from('repertoires')
-    .select('*')
-    .eq('user_id', user.id)
-    .order('updated_at', { ascending: false });
-
-  if (error) {
-    console.error('Error fetching repertoires:', error);
-  }
-
-  const repertoires = (data as Repertoire[] | null) ?? [];
-  const repCount = repertoires.length;
-
-  // 2. Fetch training sessions count
-  const { count: trainingCount } = await supabase
-    .from('training_sessions')
-    .select('*', { count: 'exact', head: true })
-    .eq('user_id', user.id);
-
-  // 3. Fetch Daily Tip (Server Side)
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-  let dailyTip = { title: "Abertura Italiana", content: "Desenvolva o bispo para c4 visando o ponto fraco f7. É uma das aberturas mais sólidas para iniciantes e mestres." };
+
+  // 1. Fetch data in parallel to avoid waterfalls
+  const [repertoiresRes, trainingCountRes, tipRes] = await Promise.all([
+    supabase
+      .from('repertoires')
+      .select('id, name, updated_at, total_study_time, total_moves_studied, color, opening_name')
+      .eq('user_id', user.id)
+      .order('updated_at', { ascending: false })
+      .limit(50), // Limit to top 50 for dashboard performance
+    
+    supabase
+      .from('training_sessions')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id),
+
+    fetch(`${baseUrl}/api/v1/ai/tip`, { next: { revalidate: 3600 } }).catch(() => null)
+  ]);
+
+  const repertoires = (repertoiresRes.data as any[] | null) ?? [];
+  const trainingCount = trainingCountRes.count ?? 0;
+  const repCount = repertoires.length;
   
-  try {
-    const tipRes = await fetch(`${baseUrl}/api/ai/tip`, { next: { revalidate: 3600 } });
-    if (tipRes.ok) {
-      dailyTip = await tipRes.json();
+  let dailyTip = { 
+    title: "Abertura Italiana", 
+    content: "Desenvolva o bispo para c4 visando o ponto fraco f7. É uma das aberturas mais sólidas para iniciantes e mestres." 
+  };
+
+  if (tipRes && tipRes.ok) {
+    const resJson = await tipRes.json();
+    if (resJson.status === 'success') {
+      dailyTip = resJson.data;
     }
-  } catch (err) {
-    console.error("Erro ao buscar dica:", err);
   }
 
-  // 4. Calculate total study stats
+  // 4. Calculate total study stats (using the select data)
   const totalSeconds = repertoires.reduce((acc, rep) => acc + (rep.total_study_time || 0), 0);
   const totalMoves = repertoires.reduce((acc, rep) => acc + (rep.total_moves_studied || 0), 0);
   const totalMinutes = Math.floor(totalSeconds / 60);

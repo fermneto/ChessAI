@@ -22,7 +22,7 @@
     "next": "15",
     "react": "19",
     "react-dom": "19",
-    "uuid": "^14.0.0"
+    "uuid": "11.0.3"
   },
   "devDependencies": {
     "@types/node": "latest",

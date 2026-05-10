@@ -39,7 +39,7 @@ export default function AICommentary({
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('/api/ai/comment', {
+      const response = await fetch('/api/v1/ai/comment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -56,10 +56,15 @@ export default function AICommentary({
         }),
       });
 
-      const data = await response.json();
-      if (data.error) throw new Error(data.error);
-      setCommentary(data.commentary);
-      setHistoryComments(prev => [...prev, data.commentary]);
+      const resJson = await response.json();
+      
+      if (resJson.status === 'error') {
+        throw new Error(resJson.message || 'Erro ao gerar análise');
+      }
+
+      const text = resJson.data.commentary;
+      setCommentary(text);
+      setHistoryComments(prev => [...prev, text]);
     } catch (err: any) {
       setError(err.message || 'Não foi possível carregar a explicação da IA.');
       console.error(err);

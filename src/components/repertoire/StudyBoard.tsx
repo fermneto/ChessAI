@@ -270,6 +270,7 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
         total_moves_studied: (repertoire.total_moves_studied || 0) + sessionMoves
       })
       .eq('id', repertoire.id)
+      .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
       .select()
       .single();
 

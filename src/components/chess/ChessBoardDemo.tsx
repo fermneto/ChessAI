@@ -143,7 +143,7 @@ export default function ChessBoardDemo() {
         )}
       </AnimatePresence>
 
-      <div className="chess-board-wrapper relative z-10 bg-white p-2.5 rounded-2xl shadow-[0_30px_100px_rgba(0,0,0,0.1)] border border-slate-100 overflow-hidden">
+      <div className="chess-board-wrapper relative z-10 bg-white p-2.5 rounded-2xl shadow-[0_15px_35px_rgba(0,0,0,0.08)] border border-slate-100">
         {!isMounted ? (
            <div className="w-full aspect-square bg-neutral-100 animate-pulse rounded-xl" />
         ) : (

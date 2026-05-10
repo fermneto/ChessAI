@@ -5,16 +5,21 @@ import { ArrowLeft } from 'lucide-react';
 import type { Metadata } from 'next';
 import RepertoireDetail from '@/components/repertoire/RepertoireDetail';
 import type { Database } from '@/types/database';
+import { isValidUUID } from '@/lib/utils/security';
 
 type Props = { params: Promise<{ id: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
+  if (!isValidUUID(id)) return { title: 'ID Inválido' };
+  
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
   const { data } = await supabase
     .from('repertoires')
     .select('*')
     .eq('id', id)
+    .eq('user_id', user?.id ?? '')
     .single();
 
   const name = (data as Database['public']['Tables']['repertoires']['Row'] | null)?.name;
@@ -27,6 +32,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function RepertoirePage({ params }: Props) {
   const { id } = await params;
+  if (!isValidUUID(id)) notFound();
+
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -36,6 +43,7 @@ export default async function RepertoirePage({ params }: Props) {
     .from('repertoires')
     .select('*')
     .eq('id', id)
+    .eq('user_id', user.id)
     .single();
 
   if (error || !repertoire) notFound();

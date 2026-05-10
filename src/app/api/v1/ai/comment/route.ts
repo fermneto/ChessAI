@@ -1,8 +1,28 @@
 import { aiService } from '@/lib/ai/service';
+import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 
+/**
+ * @api {post} /api/v1/ai/comment Pedir comentário estratégico
+ * @apiVersion 1.0.0
+ * @apiGroup AI
+ * @apiPermission Authenticated
+ */
 export async function POST(req: Request) {
   try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json(
+        { status: 'error', message: 'Não autorizado', code: 'UNAUTHORIZED' },
+        { status: 401 }
+      );
+    }
+
+    const body = await req.json();
+
+    // Validação de entrada
     const {
       fen,
       history,
@@ -14,14 +34,28 @@ export async function POST(req: Request) {
       repertoireDescription,
       engineEnabled,
       previousComments
-    } = await req.json();
+    } = body;
+
+    if (!fen || typeof fen !== 'string') {
+      return NextResponse.json(
+        { status: 'error', message: 'FEN inválida ou ausente', code: 'INVALID_INPUT' },
+        { status: 400 }
+      );
+    }
+
+    if (!Array.isArray(history)) {
+      return NextResponse.json(
+        { status: 'error', message: 'Histórico deve ser um array', code: 'INVALID_INPUT' },
+        { status: 400 }
+      );
+    }
 
     const apiKey = process.env.GROQ_API_KEY;
-
     if (!apiKey) {
-      return NextResponse.json({
-        commentary: "A chave de API da Groq não foi configurada. Por favor, adicione GROQ_API_KEY ao seu arquivo .env.local para habilitar as explicações pedagógicas ultrarrápidas."
-      });
+      return NextResponse.json(
+        { status: 'error', message: 'Configuração de IA pendente', code: 'CONFIG_MISSING' },
+        { status: 503 }
+      );
     }
 
     const prompt = `
@@ -32,7 +66,7 @@ export async function POST(req: Request) {
       - Descrição do Objetivo: ${repertoireDescription || 'Melhorar a compreensão da abertura'}
 
       CONTEXTO TÉCNICO:
-      - Motor de Análise: ${engineEnabled ? 'LIGADO (Confie nos dados abaixo)' : 'DESLIGADO (Foque apenas em conceitos gerais da posição)'}
+      - Motor de Análise: ${engineEnabled ? 'LIGADO' : 'DESLIGADO'}
       - Posição (FEN): ${fen}
       - Histórico de lances: ${history.join(', ')}
       - Abertura identificada: ${opening || 'Desconhecida'}
@@ -51,7 +85,7 @@ export async function POST(req: Request) {
            2. Não mencione números ou linhas específicas da engine, aja como um mestre observando o tabuleiro.`
       }
       3. Seja conciso (máximo 3-4 frases), com retornos claros.
-      4. Conecte sua explicação ao objetivo do estudo ("${repertoireName}") se possível.
+      4. Conecte sua explicação ao objetivo do estudo se possível.
       5. NÃO se repita em relação aos comentários anteriores.
       6. Responda em Português do Brasil com um tom profissional e inspirador.
 
@@ -60,22 +94,32 @@ export async function POST(req: Request) {
 
     const text = await aiService.generateText(prompt);
 
-    if (!text) throw new Error('A IA não retornou uma resposta válida.');
+    if (!text) {
+      throw new Error('A IA não retornou uma resposta válida.');
+    }
 
-    return NextResponse.json({ commentary: text });
+    return NextResponse.json({ 
+      status: 'success', 
+      data: { commentary: text },
+      meta: { timestamp: new Date().toISOString() }
+    });
+
   } catch (error: any) {
     const isRateLimit = error.message?.includes('429') || error.status === 429;
 
     if (isRateLimit) {
       return NextResponse.json({
-        error: "O treinador OTEN AI (Groq) atingiu o limite de consultas gratuitas. Por favor, aguarde alguns segundos antes de solicitar uma nova análise estratégica.",
-        isQuotaError: true
+        status: 'error',
+        message: "Limite de requisições da IA atingido. Tente novamente em alguns segundos.",
+        code: 'RATE_LIMIT_EXCEEDED'
       }, { status: 429 });
     }
 
-    console.error('AI Commentary Error Detail:', error);
+    console.error('[API v1 AI Comment Error]:', error);
     return NextResponse.json({
-      error: `Erro na IA (Groq): ${error.message || 'Falha desconhecida'}`
+      status: 'error',
+      message: 'Ocorreu um erro interno ao processar sua análise.',
+      code: 'INTERNAL_SERVER_ERROR'
     }, { status: 500 });
   }
 }

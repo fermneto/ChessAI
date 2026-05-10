@@ -83,6 +83,7 @@ export default function RepertoireDetail({ repertoire: initial }: Props) {
         updated_at: new Date().toISOString(),
       })
       .eq('id', repertoire.id)
+      .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
       .select()
       .single();
 
@@ -102,7 +103,8 @@ export default function RepertoireDetail({ repertoire: initial }: Props) {
     const { error: deleteError } = await (supabase
       .from('repertoires') as any)
       .delete()
-      .eq('id', repertoire.id);
+      .eq('id', repertoire.id)
+      .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
 
     if (deleteError) {
       setError(deleteError.message);
@@ -120,6 +122,7 @@ export default function RepertoireDetail({ repertoire: initial }: Props) {
       .from('repertoires') as any)
       .update({ is_public: newValue, updated_at: new Date().toISOString() })
       .eq('id', repertoire.id)
+      .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
       .select()
       .single();
 

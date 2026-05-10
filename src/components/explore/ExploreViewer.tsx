@@ -13,11 +13,19 @@ import {
   getFullLineInfo,
 } from '@/lib/chess/moveTree';
 
-interface Props {
-  repertoire: any;
+export interface ExploreStudyState {
+  fen: string;
+  history: string[];
+  opening: string | null;
+  turn: 'w' | 'b';
 }
 
-export default function ExploreViewer({ repertoire }: Props) {
+interface Props {
+  repertoire: any;
+  onStateChange?: (state: ExploreStudyState) => void;
+}
+
+export default function ExploreViewer({ repertoire, onStateChange }: Props) {
   const [isMounted, setIsMounted] = useState(false);
   const gameRef = useRef(new Chess());
   const savedMoves = repertoire.moves as any;
@@ -53,13 +61,24 @@ export default function ExploreViewer({ repertoire }: Props) {
     }
   }, []);
 
-  // Identify opening
+  // Identify opening & notify parent
   useEffect(() => {
     if (!isMounted) return;
     lookupOpening(gameRef.current.fen()).then(info => {
-      if (info) setCurrentOpening(`${info.eco}: ${info.name}`);
+      const openingStr = info ? `${info.eco}: ${info.name}` : null;
+      if (info) setCurrentOpening(openingStr);
+      
+      if (onStateChange) {
+        const path = getPathToNode(tree, currentNodeId);
+        onStateChange({
+          fen: gameRef.current.fen(),
+          history: path,
+          opening: openingStr || currentOpening,
+          turn: gameRef.current.turn() as 'w' | 'b',
+        });
+      }
     });
-  }, [fen, isMounted]);
+  }, [fen, isMounted, currentNodeId]);
 
   // Navigate to a node (read-only navigation)
   const navigateTo = useCallback((nodeId: string) => {

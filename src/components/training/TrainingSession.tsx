@@ -307,7 +307,7 @@ export default function TrainingSession({ repertoire }: Props) {
 
     setLoadingHint(true);
     try {
-      const response = await fetch('/api/ai/hint', {
+      const response = await fetch('/api/v1/ai/hint', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -319,8 +319,8 @@ export default function TrainingSession({ repertoire }: Props) {
           turn: gameRef.current.turn()
         }),
       });
-      const data = await response.json();
-      setHintText(data.hint);
+      const resJson = await response.json();
+      setHintText(resJson.status === 'success' ? resJson.data.hint : "Pense no desenvolvimento e nas casas centrais.");
       setStatus('hint');
     } catch (err) {
       setHintText("Pense no desenvolvimento e nas casas centrais.");

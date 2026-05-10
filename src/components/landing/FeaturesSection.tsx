@@ -89,7 +89,7 @@ const itemVariants = {
 
 export default function FeaturesSection() {
   return (
-    <section id="features" className="section-padding gradient-section">
+    <section id="features" className="section-padding pt-0 md:pt-0 -mt-20 md:-mt-32 gradient-section relative z-10">
       <div className="container-app">
         {/* Header */}
         <motion.div
