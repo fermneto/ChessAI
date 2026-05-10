@@ -222,22 +222,21 @@ export default async function DashboardPage() {
 
           {/* Quick actions */}
           <div className="space-y-4">
-            <div className="card-surface p-6">
-              <h2 className="font-semibold text-neutral-900 mb-4">Ações rápidas</h2>
-              <div className="space-y-2">
+            <div className="card-surface p-5">
+              <h2 className="font-semibold text-neutral-900 mb-4 text-sm uppercase tracking-wider opacity-60">Ações rápidas</h2>
+              <div className="grid grid-cols-1 gap-2">
                 {[
-                  { label: 'Novo repertório', href: '/repertoire/new', icon: Plus },
-                  { label: 'Explorar aberturas', href: '/openings', icon: BookOpen },
-                  { label: 'Iniciar treino', href: '/train', icon: Target },
-                  { label: 'Ver progresso', href: '/progress', icon: TrendingUp },
+                  { label: 'Novo repertório', href: '/repertoire/new', icon: Plus, color: 'text-blue-500' },
+                  { label: 'Explorar aberturas', href: '/openings', icon: BookOpen, color: 'text-emerald-500' },
+                  { label: 'Iniciar treino', href: '/train', icon: Target, color: 'text-orange-500' },
                 ].map((action) => (
                   <Link
                     key={action.href}
                     href={action.href}
-                    className="flex items-center gap-3 p-3 rounded-xl hover:bg-neutral-50 transition-colors group"
+                    className="flex items-center gap-3 p-3 rounded-xl hover:bg-neutral-50 transition-all group border border-transparent hover:border-neutral-100"
                   >
-                    <div className="w-8 h-8 rounded-lg bg-neutral-100 flex items-center justify-center group-hover:bg-neutral-200 transition-colors">
-                      <action.icon size={15} className="text-neutral-500" />
+                    <div className="w-8 h-8 rounded-lg bg-neutral-50 flex items-center justify-center group-hover:bg-white group-hover:shadow-sm transition-all">
+                      <action.icon size={15} className={action.color} />
                     </div>
                     <span className="text-sm font-medium text-neutral-700">{action.label}</span>
                     <ChevronRight size={14} className="text-neutral-300 ml-auto group-hover:text-neutral-500 transition-colors" />
@@ -246,16 +245,21 @@ export default async function DashboardPage() {
               </div>
             </div>
 
-            <div className="card-surface p-6">
-              <h2 className="font-semibold text-neutral-900 mb-2">Dica do dia</h2>
-              <p className="text-body text-sm leading-relaxed">
-                <strong className="text-neutral-700">{dailyTip.title}:</strong>{' '}
-                {dailyTip.content}
-              </p>
-              <div className="mt-4 pt-4 border-t border-neutral-100 flex items-center justify-between">
-                <span className="text-[10px] font-bold text-neutral-300 uppercase tracking-widest">
-                  Gerado por IA
-                </span>
+            <div className="card-surface p-5 flex flex-col justify-between min-h-[160px]">
+              <div>
+                <h2 className="font-semibold text-neutral-900 mb-3 text-sm uppercase tracking-wider opacity-60">Dica do dia</h2>
+                <p className="text-neutral-600 text-sm leading-relaxed italic">
+                  <strong className="text-neutral-900 not-italic">{dailyTip.title}:</strong>{' '}
+                  {dailyTip.content}
+                </p>
+              </div>
+              <div className="mt-4 pt-4 border-t border-neutral-50 flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
+                  <span className="text-[10px] font-bold text-neutral-300 uppercase tracking-widest">
+                    IA Ativa
+                  </span>
+                </div>
                 <TrendingUp size={12} className="text-blue-400" />
               </div>
             </div>

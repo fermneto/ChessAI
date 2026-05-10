@@ -10,8 +10,8 @@ export async function GET() {
     const today = new Date().toISOString().split('T')[0];
 
     // 1. Verificar se já existe uma dica para hoje no cache do banco
-    const { data: existingTip } = await supabase
-      .from('daily_tips')
+    const { data: existingTip } = await (supabase
+      .from('daily_tips') as any)
       .select('*')
       .eq('date', today)
       .single();
@@ -43,8 +43,8 @@ export async function GET() {
     const aiTip = JSON.parse(jsonStr);
 
     // 3. Salvar no banco para os próximos acessos do dia
-    const { data: newTip, error: saveError } = await supabase
-      .from('daily_tips')
+    const { data: newTip, error: saveError } = await (supabase
+      .from('daily_tips') as any)
       .insert({
         date: today,
         title: aiTip.title,
