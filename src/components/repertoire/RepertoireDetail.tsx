@@ -19,6 +19,7 @@ import {
   Clock,
   BarChart3,
   Target,
+  Share2,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import type { Database } from '@/types/database';
@@ -110,6 +111,24 @@ export default function RepertoireDetail({ repertoire: initial }: Props) {
       router.push('/dashboard');
       router.refresh();
     }
+  };
+
+  const togglePublish = async () => {
+    setLoading(true);
+    const newValue = !repertoire.is_public;
+    const { data, error: updateError } = await (supabase
+      .from('repertoires') as any)
+      .update({ is_public: newValue, updated_at: new Date().toISOString() })
+      .eq('id', repertoire.id)
+      .select()
+      .single();
+
+    if (!updateError && data) {
+      setRepertoire(data as Repertoire);
+    } else if (updateError) {
+      setError(updateError.message);
+    }
+    setLoading(false);
   };
 
   const formatDate = (dateStr: string) => {
@@ -448,6 +467,18 @@ export default function RepertoireDetail({ repertoire: initial }: Props) {
                   <Target size={14} />
                   Iniciar Treino (Puzzles)
                 </Link>
+                <button
+                  onClick={togglePublish}
+                  disabled={loading}
+                  className={`flex items-center gap-2.5 w-full px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                    repertoire.is_public
+                      ? 'text-blue-600 bg-blue-50 hover:bg-blue-100'
+                      : 'text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900'
+                  }`}
+                >
+                  {repertoire.is_public ? <Globe size={14} /> : <Share2 size={14} />}
+                  {repertoire.is_public ? 'Despublicar' : 'Publicar no Explorador'}
+                </button>
                 <button
                   onClick={startEditing}
                   className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-lg text-sm text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 transition-colors"

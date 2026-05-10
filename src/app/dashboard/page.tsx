@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
-import { BookOpen, Target, BarChart3, Plus, ChevronRight, Clock, TrendingUp, Crown, CircleDot } from 'lucide-react';
+import { BookOpen, Target, BarChart3, Plus, ChevronRight, Clock, TrendingUp, Crown, CircleDot, Globe } from 'lucide-react';
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import type { Database } from '@/types/database';
@@ -233,7 +233,7 @@ export default async function DashboardPage() {
               <div className="grid grid-cols-1 gap-2">
                 {[
                   { label: 'Novo repertório', href: '/repertoire/new', icon: Plus, color: 'text-blue-500' },
-                  { label: 'Explorar aberturas', href: '/openings', icon: BookOpen, color: 'text-emerald-500' },
+                  { label: 'Explorar aberturas', href: '/explore', icon: Globe, color: 'text-emerald-500' },
                   { label: 'Iniciar treino', href: '/train', icon: Target, color: 'text-orange-500' },
                 ].map((action) => (
                   <Link
