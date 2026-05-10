@@ -34,7 +34,7 @@ export default function CtaSection() {
               Pronto para dominar as aberturas?
             </h2>
             <p className="text-body-lg text-neutral-400 mb-8">
-              Junte-se a mais de 2.400 jogadores que já estão construindo
+              Junte-se à comunidade que já está construindo
               repertórios mais sólidos com IA. Grátis para começar.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -55,7 +55,7 @@ export default function CtaSection() {
               </Link>
             </div>
             <p className="text-sm text-neutral-500 mt-6">
-              Sem cartão de crédito • Cancele quando quiser • Suporte em português
+              Faça parte da comunidade • Open Source • Suporte em português
             </p>
           </motion.div>
         </div>

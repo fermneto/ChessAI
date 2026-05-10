@@ -241,13 +241,6 @@ export default function SignupPage() {
             </button>
           </form>
 
-          <p className="text-center text-xs text-neutral-400 mt-4">
-            Ao criar uma conta, você concorda com os{' '}
-            <Link href="/terms" className="underline hover:text-neutral-600">Termos de uso</Link>
-            {' '}e a{' '}
-            <Link href="/privacy" className="underline hover:text-neutral-600">Política de privacidade</Link>.
-          </p>
-
           <p className="text-center text-sm text-neutral-400 mt-5">
             Já tem uma conta?{' '}
             <Link href="/auth/login" className="text-neutral-800 font-medium hover:underline">
