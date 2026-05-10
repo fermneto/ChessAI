@@ -102,7 +102,7 @@ export default function Footer() {
         {/* Bottom Bar */}
         <div className="mt-20 pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6">
           <p className="text-sm text-neutral-500 font-medium">
-            © {new Date().getFullYear()} ChessAI. Licença MIT.
+            © <span suppressHydrationWarning>{new Date().getFullYear()}</span> ChessAI. Licença MIT.
           </p>
           
           <div className="flex items-center gap-2 text-xs text-neutral-400 font-bold bg-white/5 px-4 py-2 rounded-full border border-white/5">

@@ -146,9 +146,9 @@ export default function LoginPage() {
                 <label htmlFor="login-password" className="block text-sm font-medium text-neutral-700">
                   Senha
                 </label>
-                <Link href="/auth/forgot-password" className="text-xs text-blue-500 hover:text-blue-700">
+                <span className="text-xs text-neutral-400 cursor-not-allowed">
                   Esqueceu a senha?
-                </Link>
+                </span>
               </div>
               <div className="relative">
                 <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-300" />

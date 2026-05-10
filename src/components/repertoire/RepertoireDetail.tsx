@@ -293,7 +293,7 @@ export default function RepertoireDetail({ repertoire: initial }: Props) {
                       </button>
                       <AnimatePresence>
                         {showMenu && (
-                          <>
+                          <div key="actions-menu-wrapper">
                             <div
                               className="fixed inset-0 z-10"
                               onClick={() => setShowMenu(false)}
@@ -323,7 +323,7 @@ export default function RepertoireDetail({ repertoire: initial }: Props) {
                                 Excluir
                               </button>
                             </motion.div>
-                          </>
+                          </div>
                         )}
                       </AnimatePresence>
                     </div>
@@ -479,8 +479,16 @@ export default function RepertoireDetail({ repertoire: initial }: Props) {
                       : 'text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900'
                   }`}
                 >
-                  {repertoire.is_public ? <Globe size={14} /> : <Share2 size={14} />}
-                  {repertoire.is_public ? 'Despublicar' : 'Publicar no Explorador'}
+                  <span className="flex items-center gap-2.5 pointer-events-none">
+                    {repertoire.is_public ? (
+                      <Globe size={14} key="icon-public" />
+                    ) : (
+                      <Share2 size={14} key="icon-private" />
+                    )}
+                    <span key={repertoire.is_public ? 'text-unpublish' : 'text-publish'}>
+                      {repertoire.is_public ? 'Despublicar' : 'Publicar no Explorador'}
+                    </span>
+                  </span>
                 </button>
                 <button
                   onClick={startEditing}
