@@ -1,21 +1,28 @@
 import { v4 as uuidv4 } from 'uuid';
 
+/**
+ * Representa um lance individual na árvore de estudo
+ */
 export interface MoveNode {
   id: string;
   san: string;
   fen: string;
   parentId: string | null;
   comments?: string;
-  children: string[]; // IDs of children nodes
+  children: string[]; // IDs dos nós filhos (variantes)
 }
 
+/**
+ * Estrutura completa da árvore de lances de um repertório
+ */
 export interface ChessTree {
   nodes: Record<string, MoveNode>;
   rootId: string;
 }
 
 /**
- * Creates an empty chess tree starting from the initial position
+ * Cria uma árvore de xadrez vazia a partir da posição inicial
+ * @param initialFen A posição FEN inicial (geralmente a posição de partida)
  */
 export const createEmptyTree = (initialFen: string): ChessTree => {
   const rootId = 'root';
@@ -34,7 +41,11 @@ export const createEmptyTree = (initialFen: string): ChessTree => {
 };
 
 /**
- * Adds a move to the tree or returns existing node if already present
+ * Adiciona um lance à árvore ou retorna o nó existente se o lance já foi feito
+ * @param tree A árvore atual
+ * @param parentId O ID do nó pai onde o lance será aplicado
+ * @param san O lance em notação algébrica (ex: "e4")
+ * @param fen A posição FEN resultante do lance
  */
 export const addMoveToTree = (
   tree: ChessTree,
@@ -45,7 +56,7 @@ export const addMoveToTree = (
   const parentNode = tree.nodes[parentId];
   if (!parentNode) return { tree, nodeId: parentId };
 
-  // Check if move already exists as a child
+  // Verifica se o lance já existe como filho para evitar duplicatas
   const existingChildId = parentNode.children.find(
     childId => tree.nodes[childId].san === san
   );
@@ -54,7 +65,7 @@ export const addMoveToTree = (
     return { tree, nodeId: existingChildId };
   }
 
-  // Create new node
+  // Cria um novo nó com ID único
   const newNodeId = uuidv4();
   const newNode: MoveNode = {
     id: newNodeId,
@@ -80,27 +91,9 @@ export const addMoveToTree = (
 };
 
 /**
- * Converts a linear history array to a tree structure
- */
-export const fromLinearHistory = (history: string[], fens: string[]): ChessTree => {
-  let tree = createEmptyTree(fens[0] || 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
-  let currentId = tree.rootId;
-
-  // If we only have history, we might need to recalculate FENs, 
-  // but here we assume fens[i] is the result of history[i-1]
-  // history: [e4, e5], fens: [start, fen_after_e4, fen_after_e5]
-  
-  for (let i = 0; i < history.length; i++) {
-    const result = addMoveToTree(tree, currentId, history[i], fens[i+1]);
-    tree = result.tree;
-    currentId = result.nodeId;
-  }
-
-  return tree;
-};
-
-/**
- * Gets the main line (sequence of SANs) from root to a specific node
+ * Retorna a lista de lances (SAN) desde a raiz até um nó específico
+ * @param tree A árvore de lances
+ * @param nodeId O ID do nó de destino
  */
 export const getPathToNode = (tree: ChessTree, nodeId: string): string[] => {
   const path: string[] = [];
@@ -115,7 +108,9 @@ export const getPathToNode = (tree: ChessTree, nodeId: string): string[] => {
 };
 
 /**
- * Gets all variations (children) of a node
+ * Retorna todos os nós filhos (variantes) de um nó específico
+ * @param tree A árvore de lances
+ * @param nodeId O ID do nó pai
  */
 export const getVariations = (tree: ChessTree, nodeId: string): MoveNode[] => {
   const node = tree.nodes[nodeId];
@@ -124,7 +119,7 @@ export const getVariations = (tree: ChessTree, nodeId: string): MoveNode[] => {
 };
 
 /**
- * Gets detailed info for the current path, including siblings at each step
+ * Estrutura de dados para representar um passo no caminho atual com suas alternativas
  */
 export interface PathStep {
   nodeId: string;
@@ -132,6 +127,11 @@ export interface PathStep {
   siblings: { id: string; san: string }[];
 }
 
+/**
+ * Obtém informações detalhadas da linha atual, incluindo variantes irmãs em cada passo
+ * @param tree A árvore de lances
+ * @param nodeId O ID do nó atual
+ */
 export const getFullLineInfo = (tree: ChessTree, nodeId: string): PathStep[] => {
   const path: PathStep[] = [];
   let currentId = nodeId;

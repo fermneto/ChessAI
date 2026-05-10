@@ -26,11 +26,9 @@ import {
   type MoveNode, 
   createEmptyTree, 
   addMoveToTree, 
-  fromLinearHistory, 
   getPathToNode,
   getVariations,
   getFullLineInfo,
-  type PathStep
 } from '@/lib/chess/moveTree';
 
 
@@ -43,6 +41,7 @@ export interface StudyState {
   evaluation: string;
   bestLine: string[];
   turn: 'w' | 'b';
+  engineEnabled: boolean;
 }
 
 interface Props {
@@ -56,7 +55,6 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
   const gameRef = useRef(new Chess());
   const savedMoves = repertoire.moves as any;
   const [fen, setFen] = useState(savedMoves?.current_fen || 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
-  const [history, setHistory] = useState<string[]>(savedMoves?.history || []);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastMove, setLastMove] = useState<string | null>(null);
@@ -109,7 +107,7 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
     if (engineEnabled && isMounted) {
       analyzePosition(gameRef.current.fen());
     }
-  }, [engineEnabled, history, isMounted, analyzePosition]);
+  }, [engineEnabled, fen, isMounted, analyzePosition]);
 
   useEffect(() => {
     if (repertoire?.color) {
@@ -153,10 +151,11 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
         opening: currentOpening,
         evaluation,
         bestLine,
-        turn: gameRef.current.turn() as 'w' | 'b'
+        turn: gameRef.current.turn() as 'w' | 'b',
+        engineEnabled
       });
     }
-  }, [fen, tree, currentNodeId, currentOpening, evaluation, bestLine, onStateChange, isMounted]);
+  }, [fen, tree, currentNodeId, currentOpening, evaluation, bestLine, engineEnabled, onStateChange, isMounted]);
 
   // Sync state with repertoire when it changes from outside
   useEffect(() => {
@@ -172,16 +171,6 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
         gameRef.current = new Chess(activeNode.fen);
         setFen(activeNode.fen);
       }
-    } else if (saved.current_fen) {
-      // Migração de linear para árvore
-      const history = saved.history || [];
-      // Para migrar corretamente precisaríamos de todos os FENs históricos.
-      // Como não temos, vamos apenas começar do FEN atual ou resetar.
-      const newTree = createEmptyTree('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
-      setTree(newTree);
-      setCurrentNodeId('root');
-      gameRef.current = new Chess('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
-      setFen(gameRef.current.fen());
     }
   }, [repertoire.id]);
 

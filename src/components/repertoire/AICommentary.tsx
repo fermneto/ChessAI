@@ -13,6 +13,7 @@ interface Props {
   turn: 'w' | 'b';
   repertoireName?: string;
   repertoireDescription?: string;
+  engineEnabled: boolean;
 }
 
 export default function AICommentary({
@@ -23,7 +24,8 @@ export default function AICommentary({
   bestLine,
   turn,
   repertoireName,
-  repertoireDescription
+  repertoireDescription,
+  engineEnabled
 }: Props) {
   const [commentary, setCommentary] = useState<string | null>(null);
   const [historyComments, setHistoryComments] = useState<string[]>([]);
@@ -49,6 +51,7 @@ export default function AICommentary({
           turn,
           repertoireName,
           repertoireDescription,
+          engineEnabled,
           previousComments: historyComments.slice(-2) // Envia os últimos 2 comentários para contexto
         }),
       });
@@ -84,7 +87,7 @@ export default function AICommentary({
 
     const timer = setTimeout(() => {
       fetchCommentary();
-    }, 3000); // 3s delay to avoid hitting rate limits
+    }, 1000); // Reduzido para 1s devido à velocidade da Groq
 
     return () => clearTimeout(timer);
   }, [fen, autoExplain]);

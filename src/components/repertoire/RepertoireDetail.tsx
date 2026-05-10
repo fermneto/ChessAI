@@ -431,6 +431,7 @@ export default function RepertoireDetail({ repertoire: initial }: Props) {
                 turn={studyState.turn}
                 repertoireName={repertoire.name}
                 repertoireDescription={repertoire.description ?? undefined}
+                engineEnabled={studyState.engineEnabled}
               />
             )}
 

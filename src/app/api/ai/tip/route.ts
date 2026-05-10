@@ -1,8 +1,6 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { aiService } from '@/lib/ai/service';
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
-
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GENERATIVE_AI_API_KEY || '');
 
 export async function GET() {
   try {
@@ -20,27 +18,20 @@ export async function GET() {
       return NextResponse.json(existingTip);
     }
 
-    // 2. Se não existir, consultar a IA
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
-    
+    // 2. Se não existir, consultar a IA (Groq via Central Service)
     const prompt = `
       Você é um mestre de xadrez pedagógico. Gere uma "Dica de Abertura do Dia" para um aplicativo de estudo.
       A dica deve ser curta, profissional e instrutiva.
       
-      Retorne APENAS um objeto JSON no seguinte formato (sem markdown):
+      Retorne um objeto JSON no formato:
       {
         "title": "Nome da Abertura ou Conceito",
         "content": "Uma explicação concisa de 2-3 frases sobre a ideia principal, lances chave ou uma armadilha comum."
       }
     `;
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
-    
-    // Limpar o texto caso a IA retorne markdown
-    const jsonStr = text.replace(/```json/g, '').replace(/```/g, '').trim();
-    const aiTip = JSON.parse(jsonStr);
+    interface Tip { title: string; content: string; }
+    const aiTip = await aiService.generateJSON<Tip>(prompt);
 
     // 3. Salvar no banco para os próximos acessos do dia
     const { data: newTip, error: saveError } = await (supabase

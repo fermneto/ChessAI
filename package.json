@@ -17,6 +17,7 @@
     "clsx": "latest",
     "dotenv": "^17.4.2",
     "framer-motion": "latest",
+    "groq-sdk": "^1.1.2",
     "lucide-react": "latest",
     "next": "15",
     "react": "19",
