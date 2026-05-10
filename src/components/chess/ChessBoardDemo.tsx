@@ -145,7 +145,7 @@ export default function ChessBoardDemo() {
 
       <div className="chess-board-wrapper relative z-10 bg-white p-2.5 rounded-2xl shadow-[0_15px_35px_rgba(0,0,0,0.08)] border border-slate-100">
         {!isMounted ? (
-           <div className="w-full aspect-square bg-neutral-100 animate-pulse rounded-xl" />
+          <div className="w-full aspect-square bg-neutral-100 animate-pulse rounded-xl" />
         ) : (
           <CustomChessBoard
             position={gameRef.current.fen()}

@@ -9,7 +9,7 @@ export default function CtaSection() {
     <>
       {/* CTA */}
       <section className="relative py-24 md:py-32 overflow-hidden bg-slate-950">
-        
+
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] rounded-full bg-blue-500/5 blur-3xl" />
         </div>
@@ -25,11 +25,11 @@ export default function CtaSection() {
             <div className="flex justify-center mb-6">
               <div className="w-16 h-16 rounded-xl bg-white/10 flex items-center justify-center">
                 <svg width="32" height="32" viewBox="0 0 18 18" fill="none">
-                  <path d="M9 2L11 7H16L12 10.5L13.5 16L9 13L4.5 16L6 10.5L2 7H7L9 2Z" fill="white" opacity="0.9"/>
+                  <path d="M9 2L11 7H16L12 10.5L13.5 16L9 13L4.5 16L6 10.5L2 7H7L9 2Z" fill="white" opacity="0.9" />
                 </svg>
               </div>
             </div>
-            
+
             <h2 className="text-headline text-white mb-4">
               Pronto para dominar as aberturas?
             </h2>

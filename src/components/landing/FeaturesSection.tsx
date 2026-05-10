@@ -94,12 +94,11 @@ export default function FeaturesSection() {
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          whileInView={{ opacity: 1, y: 40 }}
           viewport={{ once: true, margin: '-80px' }}
           transition={{ duration: 0.6 }}
           className="text-center mb-16"
         >
-          <span className="badge badge-neutral mb-4">Recursos da plataforma</span>
           <h2 className="text-headline text-neutral-900 mb-4">
             Tudo que você precisa para{' '}
             <span className="gradient-text-accent">dominar aberturas</span>

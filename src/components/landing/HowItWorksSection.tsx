@@ -30,7 +30,7 @@ const steps = [
     icon: Trophy,
     title: 'Treine e memorize',
     description:
-      'Pratique com drills adaptativos que reforçam as linhas do seu repertório. Acompanhe seu progresso e evolua sistematicamente.',
+      'Pratique com puzzles adaptativos que reforçam as linhas do seu repertório. Acompanhe seu progresso e evolua sistematicamente.',
   },
 ];
 

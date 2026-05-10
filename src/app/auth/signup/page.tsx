@@ -108,7 +108,7 @@ export default function SignupPage() {
           <div className="flex items-center gap-2.5 mb-8">
             <div className="w-8 h-8 rounded-lg bg-neutral-900 flex items-center justify-center">
               <svg width="16" height="16" viewBox="0 0 18 18" fill="none">
-                <path d="M9 2L11 7H16L12 10.5L13.5 16L9 13L4.5 16L6 10.5L2 7H7L9 2Z" fill="white"/>
+                <path d="M9 2L11 7H16L12 10.5L13.5 16L9 13L4.5 16L6 10.5L2 7H7L9 2Z" fill="white" />
               </svg>
             </div>
             <span className="font-semibold text-neutral-900">ChessAI</span>
@@ -213,9 +213,8 @@ export default function SignupPage() {
                   {passwordRequirements.map((req) => (
                     <div key={req.label} className="flex items-center gap-1.5">
                       <div
-                        className={`w-3 h-3 rounded-full flex items-center justify-center transition-colors ${
-                          req.test(password) ? 'bg-green-400' : 'bg-neutral-200'
-                        }`}
+                        className={`w-3 h-3 rounded-full flex items-center justify-center transition-colors ${req.test(password) ? 'bg-green-400' : 'bg-neutral-200'
+                          }`}
                       >
                         {req.test(password) && <Check size={8} className="text-white" strokeWidth={3} />}
                       </div>
