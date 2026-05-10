@@ -359,8 +359,7 @@ Every push to the `main` branch triggers an automatic deployment.
 ---
 
 ## Notes
-
-- The `@google/generative-ai` (Gemini) package is listed as a dependency but is not used in the current codebase. All AI functionality routes through the Groq client in `src/lib/ai/service.ts`.
+  
 - Stockfish runs entirely in the browser via a Web Worker. No chess engine calls hit the server.
 - The opening detection (`lib/chess/openingDatabase.ts`) loads `public/openings.json` once and keeps it in memory for the duration of the session. It falls back to a small hardcoded list for the most common starting positions to provide instant responses.
 - The `debug_db.ts` file in the root is a development utility for testing the Supabase connection and is not part of the application.
