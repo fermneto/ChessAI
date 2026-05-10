@@ -13,13 +13,14 @@ export default async function TrainingPage({ params }: Props) {
 
   if (!user) redirect('/auth/login');
 
-  const { data: repertoire, error } = await supabase
+  const { data, error } = await supabase
     .from('repertoires')
     .select('*')
     .eq('id', id)
     .single();
 
-  if (error || !repertoire) notFound();
+  if (error || !data) notFound();
+  const repertoire = data as any; // Cast to bypass strict inference issues in build worker
 
   return (
     <div className="min-h-screen bg-neutral-900 text-white overflow-hidden flex flex-col">
