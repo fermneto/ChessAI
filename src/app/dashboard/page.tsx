@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { getDailyTip } from '@/lib/ai/tips';
 import { redirect } from 'next/navigation';
 import { BookOpen, Target, BarChart3, Plus, ChevronRight, Clock, TrendingUp, Crown, CircleDot, Globe } from 'lucide-react';
 import Link from 'next/link';
@@ -19,10 +20,9 @@ export default async function DashboardPage() {
   if (!user) redirect('/auth/login');
 
   const userName = user.user_metadata?.full_name?.split(' ')[0] ?? 'Jogador';
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
   // 1. Fetch data in parallel to avoid waterfalls
-  const [repertoiresRes, trainingCountRes, tipRes] = await Promise.all([
+  const [repertoiresRes, trainingCountRes, dailyTip] = await Promise.all([
     supabase
       .from('repertoires')
       .select('id, name, updated_at, total_study_time, total_moves_studied, color, opening_name')
@@ -35,24 +35,12 @@ export default async function DashboardPage() {
       .select('*', { count: 'exact', head: true })
       .eq('user_id', user.id),
 
-    fetch(`${baseUrl}/api/v1/ai/tip`, { next: { revalidate: 3600 } }).catch(() => null)
+    getDailyTip()
   ]);
 
   const repertoires = (repertoiresRes.data as any[] | null) ?? [];
   const trainingCount = trainingCountRes.count ?? 0;
   const repCount = repertoires.length;
-  
-  let dailyTip = { 
-    title: "Abertura Italiana", 
-    content: "Desenvolva o bispo para c4 visando o ponto fraco f7. É uma das aberturas mais sólidas para iniciantes e mestres." 
-  };
-
-  if (tipRes && tipRes.ok) {
-    const resJson = await tipRes.json();
-    if (resJson.status === 'success') {
-      dailyTip = resJson.data;
-    }
-  }
 
   // 4. Calculate total study stats (using the select data)
   const totalSeconds = repertoires.reduce((acc, rep) => acc + (rep.total_study_time || 0), 0);

@@ -132,6 +132,29 @@ export interface Database {
           session_type?: 'drill' | 'exploration' | 'analysis';
         };
       };
+      daily_tips: {
+        Row: {
+          id: string;
+          date: string;
+          title: string;
+          content: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          date?: string;
+          title: string;
+          content: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          date?: string;
+          title?: string;
+          content?: string;
+          created_at?: string;
+        };
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
