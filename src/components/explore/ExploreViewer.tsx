@@ -228,7 +228,7 @@ export default function ExploreViewer({ repertoire, onStateChange }: Props) {
   );
 
   return (
-    <div className="space-y-4 min-w-0 overflow-x-hidden">
+    <div className="space-y-4 min-w-0">
       {/* Opening label area - fixed height to prevent layout shift */}
       <div className="min-h-[34px]">
         {currentOpening && (

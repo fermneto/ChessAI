@@ -376,7 +376,7 @@ export default function TrainingSession({ repertoire }: Props) {
   if (!isMounted) return null;
 
   return (
-    <div className="h-full flex flex-col md:flex-row gap-6 p-4 md:p-6 lg:p-8 max-w-7xl mx-auto w-full min-w-0 overflow-x-hidden">
+    <div className="h-full flex flex-col md:flex-row gap-6 p-4 md:p-6 lg:p-8 max-w-7xl mx-auto w-full min-w-0">
 
       {/* Board Column */}
       <div className="flex-1 flex flex-col items-center justify-center gap-4 min-w-0">
