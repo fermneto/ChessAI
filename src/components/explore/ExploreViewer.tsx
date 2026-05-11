@@ -27,6 +27,7 @@ interface Props {
 
 export default function ExploreViewer({ repertoire, onStateChange }: Props) {
   const [isMounted, setIsMounted] = useState(false);
+  const breadcrumbsRef = useRef<HTMLDivElement>(null);
   const gameRef = useRef(new Chess());
   const savedMoves = repertoire.moves as any;
 
@@ -104,6 +105,10 @@ export default function ExploreViewer({ repertoire, onStateChange }: Props) {
     }
     forceUpdate();
   }, [tree, forceUpdate]);
+
+  const resetExplorer = useCallback(() => {
+    navigateTo('root');
+  }, [navigateTo]);
 
   // Navigate to prev/next in path
   const goBack = useCallback(() => {
@@ -228,7 +233,7 @@ export default function ExploreViewer({ repertoire, onStateChange }: Props) {
   );
 
   return (
-    <div className="space-y-4 min-w-0 max-w-full overflow-hidden">
+    <div className="space-y-4 min-w-0 max-w-full overflow-hidden grid grid-cols-1">
       {/* Opening label area - fixed height to prevent layout shift */}
       <div className="min-h-[34px]">
         {currentOpening && (
@@ -285,34 +290,63 @@ export default function ExploreViewer({ repertoire, onStateChange }: Props) {
         </button>
       </div>
 
-      {/* Move notation */}
+      {/* Move notation (Breadcrumbs style) */}
       <div className="bg-neutral-50 border border-neutral-200 rounded-xl p-3 min-h-[70px] flex flex-col justify-center overflow-hidden w-full max-w-[600px] mx-auto">
         <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 mb-1">Caminho atual</p>
-        <div className="flex flex-nowrap gap-1 overflow-x-auto no-scrollbar w-full max-w-full">
-          {pathNodes.length > 0 ? (
-            pathNodes.map((san, i) => {
-              const isEven = i % 2 === 0;
-              return (
-                <span key={i} className="flex items-center gap-0.5">
-                  {isEven && (
-                    <span className="text-[10px] text-neutral-400 font-mono">{Math.floor(i / 2) + 1}.</span>
-                  )}
-                  <span className={`text-xs font-bold px-1 py-0.5 rounded ${i === pathNodes.length - 1 ? 'bg-blue-100 text-blue-700' : 'text-neutral-700'}`}>
-                    {san}
-                  </span>
-                </span>
-              );
-            })
-          ) : (
-            <span className="text-[10px] text-neutral-400 italic">Posição inicial</span>
-          )}
+        <div className="w-0 min-w-full overflow-x-auto overflow-y-hidden no-scrollbar">
+          <div
+            ref={breadcrumbsRef}
+            className="block whitespace-nowrap py-2 min-h-[44px] bg-neutral-50/50 px-2 border border-transparent w-max min-w-full"
+          >
+            {pathNodes.length > 0 ? (
+              <div className="inline-flex items-center gap-1">
+                <button
+                  onClick={resetExplorer}
+                  className="p-2 rounded-lg hover:bg-neutral-100 text-neutral-400 transition-colors shrink-0"
+                  title="Início"
+                >
+                  <RotateCcw size={14} />
+                </button>
+                <ChevronRight size={12} className="text-neutral-300 shrink-0" />
+                <div className="inline-flex items-center gap-1">
+                  {pathNodes.map((san, i) => {
+                    const nodes = getFullLineInfo(tree, currentNodeId);
+                    const stepNodeId = nodes[i]?.nodeId;
+
+                    return (
+                      <div key={i} className="inline-flex items-center">
+                        <button
+                          onClick={() => stepNodeId && navigateTo(stepNodeId)}
+                          className={`text-[0.8125rem] font-medium px-2 py-1 rounded-md transition-all whitespace-nowrap ${i === pathNodes.length - 1
+                            ? 'text-blue-600 font-bold bg-blue-50'
+                            : 'text-neutral-500 hover:text-neutral-900 hover:bg-neutral-50'
+                            }`}
+                        >
+                          {i % 2 === 0 ? `${Math.floor(i / 2) + 1}. ` : ''}{san}
+                        </button>
+                        {i < pathNodes.length - 1 && (
+                          <ChevronRight size={10} className="text-neutral-300 mx-1 shrink-0" />
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 text-neutral-400">
+                <RotateCcw size={14} className="opacity-20" />
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Posição Inicial</span>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
       {/* Variations (children at current node) */}
       <div className="bg-neutral-50 border border-neutral-200 rounded-xl p-3 min-h-[85px] flex flex-col justify-center overflow-hidden w-full max-w-[600px] mx-auto">
         <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 mb-2">Continuações</p>
-        <div className="flex flex-nowrap gap-1.5 overflow-x-auto no-scrollbar w-full max-w-full">
+        <div className="w-0 min-w-full overflow-x-auto overflow-y-hidden no-scrollbar">
+          <div className="block whitespace-nowrap w-max min-w-full">
           {hasChildren ? (
             currentNode!.children!.map((childId, i) => {
               const child = tree.nodes[childId];
@@ -333,6 +367,7 @@ export default function ExploreViewer({ repertoire, onStateChange }: Props) {
           ) : (
             <span className="text-xs text-neutral-400 italic">Fim da linha explorada</span>
           )}
+          </div>
         </div>
       </div>
     </div>

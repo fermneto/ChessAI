@@ -361,14 +361,14 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
   return (
     <div className="flex flex-col gap-6 max-w-full overflow-hidden">
       <div className="grid lg:grid-cols-12 gap-6 min-w-0">
-        <div className="lg:col-span-7 flex flex-col gap-2 min-w-0">
-          <div className="bg-white p-3 rounded-2xl shadow-sm border border-neutral-100 flex items-center justify-between gap-4 min-h-[58px] w-full max-w-[600px] mx-auto">
+        <div className="lg:col-span-7 flex flex-col gap-2 min-w-0 max-w-full overflow-x-hidden">
+          <div className="bg-white p-3 rounded-2xl shadow-sm border border-neutral-100 flex items-center justify-between gap-4 min-h-[58px] max-w-[600px]">
             <div className="flex items-center gap-3 flex-1 min-w-0">
               <button
                 onClick={() => setEngineEnabled(!engineEnabled)}
                 className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-sm shrink-0 ${engineEnabled
-                    ? 'bg-blue-600 text-white shadow-blue-500/20'
-                    : 'bg-neutral-100 text-neutral-400'
+                  ? 'bg-blue-600 text-white shadow-blue-500/20'
+                  : 'bg-neutral-100 text-neutral-400'
                   }`}
               >
                 <Zap size={14} className={engineEnabled ? 'fill-white' : ''} />
@@ -379,7 +379,7 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
                 {engineEnabled ? (
                   <div className="flex items-center gap-3 animate-in fade-in slide-in-from-left-2 overflow-hidden">
                     <div className={`px-3 py-1.5 rounded-lg font-mono font-bold text-sm shadow-inner shrink-0 ${evaluation.startsWith('+') ? 'bg-green-50 text-green-700' :
-                        evaluation.startsWith('-') ? 'bg-red-50 text-red-700' : 'bg-neutral-50 text-neutral-600'
+                      evaluation.startsWith('-') ? 'bg-red-50 text-red-700' : 'bg-neutral-50 text-neutral-600'
                       }`}>
                       {evaluation}
                     </div>
@@ -576,7 +576,7 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
             <div className="space-y-4">
               <div className="flex items-center gap-3">
                 <div className={`w-10 text-xs font-mono font-bold text-right ${evaluation.startsWith('+') ? 'text-green-400' :
-                    evaluation.startsWith('-') ? 'text-red-400' : 'text-blue-400'
+                  evaluation.startsWith('-') ? 'text-red-400' : 'text-blue-400'
                   }`}>
                   {evaluation}
                 </div>
@@ -613,12 +613,13 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
       </div>
 
       {/* Branch & Variation Navigator - Refactored */}
-      <div className="mt-4 flex flex-col gap-4 min-w-0 overflow-hidden">
+      <div className="mt-4 grid grid-cols-1 gap-4 w-full max-w-[600px] mx-auto overflow-hidden">
         {/* 1. Breadcrumbs (Current Path) */}
-        <div 
-          ref={breadcrumbsRef}
-          className="flex items-center gap-2 overflow-x-auto py-2 no-scrollbar min-h-[44px] bg-neutral-50/50 rounded-lg px-2 border border-transparent w-full max-w-[600px] mx-auto flex-nowrap shrink"
-        >
+        <div className="w-0 min-w-full overflow-x-auto overflow-y-hidden no-scrollbar rounded-lg">
+          <div
+            ref={breadcrumbsRef}
+            className="block whitespace-nowrap py-2 min-h-[44px] bg-neutral-50/50 px-2 border border-transparent w-max min-w-full"
+          >
           {getFullLineInfo(tree, currentNodeId).length > 0 ? (
             <>
               <button
@@ -629,9 +630,9 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
                 <RotateCcw size={14} />
               </button>
               <ChevronRight size={12} className="text-neutral-300 shrink-0" />
-              <div className="flex items-center gap-1 flex-nowrap">
+              <div className="inline-flex items-center gap-1">
                 {getFullLineInfo(tree, currentNodeId).map((step, idx) => (
-                  <div key={step.nodeId} className="flex items-center">
+                  <div key={step.nodeId} className="inline-flex items-center">
                     <button
                       onClick={() => {
                         setCurrentNodeId(step.nodeId);
@@ -639,8 +640,8 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
                         setFen(tree.nodes[step.nodeId].fen);
                       }}
                       className={`text-[0.8125rem] font-medium px-2 py-1 rounded-md transition-all whitespace-nowrap ${idx === getFullLineInfo(tree, currentNodeId).length - 1
-                          ? 'text-blue-600 font-bold bg-blue-50'
-                          : 'text-neutral-500 hover:text-neutral-900 hover:bg-neutral-50'
+                        ? 'text-blue-600 font-bold bg-blue-50'
+                        : 'text-neutral-500 hover:text-neutral-900 hover:bg-neutral-50'
                         }`}
                     >
                       {idx % 2 === 0 ? `${Math.floor(idx / 2) + 1}. ` : ''}{step.san}
@@ -659,6 +660,7 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
             </div>
           )}
         </div>
+      </div>
 
         {/* 2. Variation Explorer (Continuations) */}
         <div className="card-surface p-5 bg-white border border-neutral-100 shadow-sm min-h-[160px] w-full max-w-[600px] mx-auto">
