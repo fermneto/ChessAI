@@ -37,13 +37,7 @@ export default async function ExploreDetailPage({ params }: Props) {
   if (!user) redirect('/auth/login');
 
   const { data, error } = await (supabase.from('repertoires') as any)
-    .select(`
-      *,
-      profiles:user_id (
-        full_name,
-        username
-      )
-    `)
+    .select('*')
     .eq('id', id)
     .eq('is_public', true)
     .single();
@@ -51,8 +45,16 @@ export default async function ExploreDetailPage({ params }: Props) {
   if (error || !data) notFound();
 
   const repertoire = data as any;
-  const authorName = repertoire.profiles?.full_name || repertoire.profiles?.username || 'Anônimo';
+  
+  // Buscar perfil separadamente para evitar erro de JOIN
+  const { data: profile } = await (supabase.from('profiles') as any)
+    .select('full_name, username')
+    .eq('id', repertoire.user_id)
+    .single();
+
+  const authorName = profile?.full_name || profile?.username || 'Anônimo';
 
   return <ExploreDetailClient repertoire={repertoire} authorName={authorName} />;
 }
+
 

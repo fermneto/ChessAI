@@ -23,34 +23,38 @@ export default async function ExplorePage({
   const { q, color } = await searchParams;
 
   let query = (supabase.from('repertoires') as any)
-    .select(`
-      id, 
-      name, 
-      description, 
-      color, 
-      opening_name, 
-      eco_code, 
-      tags, 
-      total_moves_studied, 
-      created_at, 
-      user_id,
-      profiles:user_id (
-        full_name,
-        username
-      )
-    `)
-    .eq('is_public', true)
-    .ilike('name', q ? `%${q}%` : '%');
+    .select('id, name, description, color, opening_name, total_moves_studied, created_at, user_id')
+    .eq('is_public', true);
+
+  if (q) {
+    query = query.ilike('name', `%${q}%`);
+  }
 
   if (color && (color === 'white' || color === 'black')) {
     query = query.eq('color', color);
   }
 
-  const { data: repertoires } = await query
+  const { data: repertoires, error: fetchError } = await query
     .order('created_at', { ascending: false })
     .limit(60);
 
+  if (fetchError) {
+    console.error('[ExplorePage Fetch Error]:', JSON.stringify(fetchError, null, 2));
+  }
+
+
   const items = (repertoires || []) as any[];
+
+  // Fetch author profiles separately to avoid JOIN errors
+  const userIds = [...new Set(items.map((r) => r.user_id))];
+  const { data: profiles } = await (supabase.from('profiles') as any)
+    .select('id, full_name, username')
+    .in('id', userIds);
+
+  const profileMap: Record<string, any> = {};
+  (profiles || []).forEach((p: any) => {
+    profileMap[p.id] = p;
+  });
 
 
 
@@ -151,7 +155,10 @@ export default async function ExplorePage({
                     <div className="flex items-center gap-3 mt-3">
                       <span className="flex items-center gap-1 text-[10px] text-neutral-400 font-bold uppercase tracking-wider">
                         <BookOpen size={11} />
-                        por {rep.profiles?.full_name || rep.profiles?.username || 'Anônimo'}
+                        por {(() => {
+                          const p = profileMap[rep.user_id];
+                          return p?.full_name || p?.username || 'Anônimo';
+                        })()}
                       </span>
                       <span className="flex items-center gap-1 text-[10px] text-neutral-400 font-bold uppercase tracking-wider">
                         <BarChart3 size={11} />
