@@ -28,6 +28,7 @@ yarn-error.log*
 .env
 .env.production
 .env.test
+.env.keys
 !.env.example
 
 # TypeScript
