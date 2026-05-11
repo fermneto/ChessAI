@@ -349,8 +349,8 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="grid lg:grid-cols-12 gap-6">
-        <div className="lg:col-span-7 flex flex-col gap-2">
+      <div className="grid lg:grid-cols-12 gap-6 min-w-0">
+        <div className="lg:col-span-7 flex flex-col gap-2 min-w-0">
           <div className="bg-white p-3 rounded-2xl shadow-sm border border-neutral-100 flex items-center justify-between gap-4 min-h-[58px]">
             <div className="flex items-center gap-3 flex-1 min-w-0">
               <button
@@ -497,7 +497,7 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
           </div>
         </div>
 
-        <div className="lg:col-span-5 flex flex-col gap-5">
+        <div className="lg:col-span-5 flex flex-col gap-5 min-w-0">
           <div className="card-surface flex flex-col min-h-[300px]">
             <div className="p-4 border-b border-neutral-100 flex items-center justify-between bg-neutral-50/30">
               <div className="flex items-center gap-2">
@@ -533,12 +533,12 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
                     return Array.from({ length: Math.ceil(currentLine.length / 2) }).map((_, i) => (
                       <div key={i} className="flex items-center gap-2 text-sm py-1 border-b border-neutral-50 last:border-0">
                         <span className="w-5 text-neutral-300 font-mono text-[10px]">{i + 1}.</span>
-                        <div className="flex-1 grid grid-cols-2 gap-2">
-                          <span className={`px-2 py-0.5 rounded ${currentLine.length === i * 2 + 1 ? 'bg-blue-50 text-blue-700 font-bold' : 'text-neutral-700'}`}>
+                        <div className="flex-1 grid grid-cols-2 gap-2 min-w-0">
+                          <span className={`px-2 py-0.5 rounded truncate ${currentLine.length === i * 2 + 1 ? 'bg-blue-50 text-blue-700 font-bold' : 'text-neutral-700'}`}>
                             {currentLine[i * 2]}
                           </span>
                           {currentLine[i * 2 + 1] && (
-                            <span className={`px-2 py-0.5 rounded ${currentLine.length === i * 2 + 2 ? 'bg-blue-50 text-blue-700 font-bold' : 'text-neutral-700'}`}>
+                            <span className={`px-2 py-0.5 rounded truncate ${currentLine.length === i * 2 + 2 ? 'bg-blue-50 text-blue-700 font-bold' : 'text-neutral-700'}`}>
                               {currentLine[i * 2 + 1]}
                             </span>
                           )}
@@ -604,7 +604,7 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
       {/* Branch & Variation Navigator - Refactored */}
       <div className="mt-4 flex flex-col gap-4">
         {/* 1. Breadcrumbs (Current Path) */}
-        <div className="flex items-center gap-2 overflow-x-auto py-2 no-scrollbar min-h-[44px] bg-neutral-50/50 rounded-lg px-2 border border-transparent">
+        <div className="flex items-center gap-2 overflow-x-auto py-2 no-scrollbar min-h-[44px] bg-neutral-50/50 rounded-lg px-2 border border-transparent w-full max-w-full">
           {getFullLineInfo(tree, currentNodeId).length > 0 ? (
             <>
               <button

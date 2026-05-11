@@ -79,6 +79,7 @@ body {
   background-color: #ffffff;
   color: var(--color-neutral-800);
   line-height: 1.6;
+  overflow-x: hidden;
 }
 
 /* ===========================

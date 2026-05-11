@@ -376,10 +376,10 @@ export default function TrainingSession({ repertoire }: Props) {
   if (!isMounted) return null;
 
   return (
-    <div className="h-full flex flex-col md:flex-row gap-6 p-4 md:p-6 lg:p-8 max-w-7xl mx-auto w-full">
+    <div className="h-full flex flex-col md:flex-row gap-6 p-4 md:p-6 lg:p-8 max-w-7xl mx-auto w-full min-w-0 overflow-x-hidden">
 
       {/* Board Column */}
-      <div className="flex-1 flex flex-col items-center justify-center gap-4">
+      <div className="flex-1 flex flex-col items-center justify-center gap-4 min-w-0">
         {/* Mode Selector */}
         <div className="flex bg-white/5 p-1 rounded-xl border border-white/10 mb-2">
           <button
@@ -525,7 +525,7 @@ export default function TrainingSession({ repertoire }: Props) {
       </div>
 
       {/* Info Column */}
-      <div className="w-full md:w-[320px] flex flex-col gap-4">
+      <div className="w-full md:w-[320px] flex flex-col gap-4 min-w-0">
 
         {/* Stats Card */}
         <div className="bg-neutral-800/50 border border-white/10 rounded-2xl p-5 overflow-hidden relative">
