@@ -280,7 +280,7 @@ export default function TrainingSession({ repertoire }: Props) {
     }, 1000);
   };
 
-  const getHint = async () => {
+  const getHint = useCallback(async () => {
     const targetMove = currentPuzzle?.solution[solutionIndex];
     if (!targetMove || loadingHint) return;
 
@@ -314,9 +314,50 @@ export default function TrainingSession({ repertoire }: Props) {
     } finally {
       setLoadingHint(false);
     }
-  };
+  }, [currentPuzzle, solutionIndex, loadingHint, opening, mode, repertoire.name]);
 
+  const undoMove = useCallback(() => {
+    if (status === 'correct' || status === 'complete') return;
+    
+    // In puzzles, we might need to undo more if we want to support history
+    // but for now let's just support undoing the player's last move attempt if it was wrong/waiting
+    const move = gameRef.current.undo();
+    if (move) {
+      setFen(gameRef.current.fen());
+      setLastMove(null);
+      setStatus('waiting');
+    }
+  }, [status]);
 
+  // Keyboard Navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (
+        document.activeElement?.tagName === 'INPUT' ||
+        document.activeElement?.tagName === 'TEXTAREA'
+      ) {
+        return;
+      }
+
+      switch (e.key) {
+        case 'ArrowLeft':
+          e.preventDefault();
+          undoMove();
+          break;
+        case 'ArrowRight':
+          e.preventDefault();
+          if (status === 'correct' || status === 'complete') {
+            startNewPuzzle();
+          } else {
+            getHint();
+          }
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [undoMove, getHint, status, startNewPuzzle]);
 
   const saveSession = async () => {
     const { data: { user } } = await supabase.auth.getUser();

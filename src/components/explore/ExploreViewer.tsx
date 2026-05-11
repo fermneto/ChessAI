@@ -106,19 +106,63 @@ export default function ExploreViewer({ repertoire, onStateChange }: Props) {
   }, [tree, forceUpdate]);
 
   // Navigate to prev/next in path
-  const goBack = () => {
+  const goBack = useCallback(() => {
     const node = tree.nodes[currentNodeId];
     if (node?.parentId) navigateTo(node.parentId);
-  };
+  }, [tree, currentNodeId, navigateTo]);
 
-  const goForward = () => {
+  const goForward = useCallback(() => {
     const node = tree.nodes[currentNodeId];
     if (node?.children && node.children.length > 0) navigateTo(node.children[0]);
-  };
+  }, [tree, currentNodeId, navigateTo]);
 
-  const goToRoot = () => {
+  const goToRoot = useCallback(() => {
     navigateTo(tree.rootId);
-  };
+  }, [tree, navigateTo]);
+
+  const goToEnd = useCallback(() => {
+    let current = tree.nodes[currentNodeId];
+    while (current && current.children && current.children.length > 0) {
+      current = tree.nodes[current.children[0]];
+    }
+    if (current && current.id !== currentNodeId) {
+      navigateTo(current.id);
+    }
+  }, [tree, currentNodeId, navigateTo]);
+
+  // Keyboard Navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (
+        document.activeElement?.tagName === 'INPUT' ||
+        document.activeElement?.tagName === 'TEXTAREA'
+      ) {
+        return;
+      }
+
+      switch (e.key) {
+        case 'ArrowLeft':
+          e.preventDefault();
+          goBack();
+          break;
+        case 'ArrowRight':
+          e.preventDefault();
+          goForward();
+          break;
+        case 'ArrowUp':
+          e.preventDefault();
+          goToRoot();
+          break;
+        case 'ArrowDown':
+          e.preventDefault();
+          goToEnd();
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [goBack, goForward, goToRoot, goToEnd]);
 
   // Square click for read-only navigation (allow clicking moves in tree)
   const onSquareClick = (square: string) => {
@@ -240,11 +284,11 @@ export default function ExploreViewer({ repertoire, onStateChange }: Props) {
       </div>
 
       {/* Move notation */}
-      {pathNodes.length > 0 && (
-        <div className="bg-neutral-50 border border-neutral-200 rounded-xl p-3">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 mb-2">Linha atual</p>
-          <div className="flex flex-wrap gap-1">
-            {pathNodes.map((san, i) => {
+      <div className="bg-neutral-50 border border-neutral-200 rounded-xl p-3 min-h-[70px] flex flex-col justify-center">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 mb-1">Caminho atual</p>
+        <div className="flex flex-wrap gap-1">
+          {pathNodes.length > 0 ? (
+            pathNodes.map((san, i) => {
               const isEven = i % 2 === 0;
               return (
                 <span key={i} className="flex items-center gap-0.5">
@@ -256,17 +300,19 @@ export default function ExploreViewer({ repertoire, onStateChange }: Props) {
                   </span>
                 </span>
               );
-            })}
-          </div>
+            })
+          ) : (
+            <span className="text-[10px] text-neutral-400 italic">Posição inicial</span>
+          )}
         </div>
-      )}
+      </div>
 
       {/* Variations (children at current node) */}
-      {hasChildren && (
-        <div className="bg-neutral-50 border border-neutral-200 rounded-xl p-3">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 mb-2">Continuações</p>
-          <div className="flex flex-wrap gap-1.5">
-            {currentNode!.children!.map((childId, i) => {
+      <div className="bg-neutral-50 border border-neutral-200 rounded-xl p-3 min-h-[85px] flex flex-col justify-center">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 mb-2">Continuações</p>
+        <div className="flex flex-wrap gap-1.5">
+          {hasChildren ? (
+            currentNode!.children!.map((childId, i) => {
               const child = tree.nodes[childId];
               return (
                 <button
@@ -281,10 +327,12 @@ export default function ExploreViewer({ repertoire, onStateChange }: Props) {
                   {child.san}
                 </button>
               );
-            })}
-          </div>
+            })
+          ) : (
+            <span className="text-xs text-neutral-400 italic">Fim da linha explorada</span>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }

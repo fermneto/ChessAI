@@ -232,7 +232,7 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
     }
   }
 
-  const undoMove = () => {
+  const undoMove = useCallback(() => {
     const currentNode = tree.nodes[currentNodeId];
     if (currentNode && currentNode.parentId) {
       const parentNode = tree.nodes[currentNode.parentId];
@@ -241,17 +241,82 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
       setCurrentNodeId(parentNode.id);
       setLastMove(null);
       setManualArrows([]);
+      forceUpdate();
     }
-  };
+  }, [tree, currentNodeId, forceUpdate]);
 
-  const resetBoard = () => {
+  const resetBoard = useCallback(() => {
     setCurrentNodeId(tree.rootId);
     const rootNode = tree.nodes[tree.rootId];
     gameRef.current = new Chess(rootNode.fen);
     setFen(rootNode.fen);
     setLastMove(null);
     setManualArrows([]);
-  };
+    forceUpdate();
+  }, [tree, forceUpdate]);
+
+  const goForward = useCallback(() => {
+    const variations = getVariations(tree, currentNodeId);
+    if (variations.length > 0) {
+      const nextNode = variations[0];
+      gameRef.current = new Chess(nextNode.fen);
+      setFen(nextNode.fen);
+      setCurrentNodeId(nextNode.id);
+      setLastMove(null);
+      setManualArrows([]);
+      forceUpdate();
+    }
+  }, [tree, currentNodeId, forceUpdate]);
+
+  const goToEnd = useCallback(() => {
+    let current = tree.nodes[currentNodeId];
+    while (current && current.children && current.children.length > 0) {
+      current = tree.nodes[current.children[0]];
+    }
+    if (current && current.id !== currentNodeId) {
+      gameRef.current = new Chess(current.fen);
+      setFen(current.fen);
+      setCurrentNodeId(current.id);
+      setLastMove(null);
+      setManualArrows([]);
+      forceUpdate();
+    }
+  }, [tree, currentNodeId, forceUpdate]);
+
+  // Keyboard Navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't navigate if user is typing in an input or textarea
+      if (
+        document.activeElement?.tagName === 'INPUT' ||
+        document.activeElement?.tagName === 'TEXTAREA'
+      ) {
+        return;
+      }
+
+      switch (e.key) {
+        case 'ArrowLeft':
+          e.preventDefault();
+          undoMove();
+          break;
+        case 'ArrowRight':
+          e.preventDefault();
+          goForward();
+          break;
+        case 'ArrowUp':
+          e.preventDefault();
+          resetBoard();
+          break;
+        case 'ArrowDown':
+          e.preventDefault();
+          goToEnd();
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [undoMove, goForward, resetBoard, goToEnd]);
 
   const saveRepertoire = async () => {
     setLoading(true);
@@ -536,43 +601,50 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
       {/* Branch & Variation Navigator - Refactored */}
       <div className="mt-4 flex flex-col gap-4">
         {/* 1. Breadcrumbs (Current Path) */}
-        {getFullLineInfo(tree, currentNodeId).length > 0 && (
-          <div className="flex items-center gap-2 overflow-x-auto py-2 no-scrollbar">
-            <button
-              onClick={() => resetBoard()}
-              className="p-2 rounded-lg hover:bg-neutral-100 text-neutral-400 transition-colors shrink-0"
-              title="Início"
-            >
-              <RotateCcw size={14} />
-            </button>
-            <ChevronRight size={12} className="text-neutral-300 shrink-0" />
-            <div className="flex items-center gap-1">
-              {getFullLineInfo(tree, currentNodeId).map((step, idx) => (
-                <div key={step.nodeId} className="flex items-center">
-                  <button
-                    onClick={() => {
-                      setCurrentNodeId(step.nodeId);
-                      gameRef.current = new Chess(tree.nodes[step.nodeId].fen);
-                      setFen(tree.nodes[step.nodeId].fen);
-                    }}
-                    className={`text-[0.8125rem] font-medium px-2 py-1 rounded-md transition-all whitespace-nowrap ${idx === getFullLineInfo(tree, currentNodeId).length - 1
-                        ? 'text-blue-600 font-bold bg-blue-50'
-                        : 'text-neutral-500 hover:text-neutral-900 hover:bg-neutral-50'
-                      }`}
-                  >
-                    {idx % 2 === 0 ? `${Math.floor(idx / 2) + 1}. ` : ''}{step.san}
-                  </button>
-                  {idx < getFullLineInfo(tree, currentNodeId).length - 1 && (
-                    <ChevronRight size={10} className="text-neutral-300 mx-1 shrink-0" />
-                  )}
-                </div>
-              ))}
+        <div className="flex items-center gap-2 overflow-x-auto py-2 no-scrollbar min-h-[44px] bg-neutral-50/50 rounded-lg px-2 border border-transparent">
+          {getFullLineInfo(tree, currentNodeId).length > 0 ? (
+            <>
+              <button
+                onClick={() => resetBoard()}
+                className="p-2 rounded-lg hover:bg-neutral-100 text-neutral-400 transition-colors shrink-0"
+                title="Início"
+              >
+                <RotateCcw size={14} />
+              </button>
+              <ChevronRight size={12} className="text-neutral-300 shrink-0" />
+              <div className="flex items-center gap-1">
+                {getFullLineInfo(tree, currentNodeId).map((step, idx) => (
+                  <div key={step.nodeId} className="flex items-center">
+                    <button
+                      onClick={() => {
+                        setCurrentNodeId(step.nodeId);
+                        gameRef.current = new Chess(tree.nodes[step.nodeId].fen);
+                        setFen(tree.nodes[step.nodeId].fen);
+                      }}
+                      className={`text-[0.8125rem] font-medium px-2 py-1 rounded-md transition-all whitespace-nowrap ${idx === getFullLineInfo(tree, currentNodeId).length - 1
+                          ? 'text-blue-600 font-bold bg-blue-50'
+                          : 'text-neutral-500 hover:text-neutral-900 hover:bg-neutral-50'
+                        }`}
+                    >
+                      {idx % 2 === 0 ? `${Math.floor(idx / 2) + 1}. ` : ''}{step.san}
+                    </button>
+                    {idx < getFullLineInfo(tree, currentNodeId).length - 1 && (
+                      <ChevronRight size={10} className="text-neutral-300 mx-1 shrink-0" />
+                    )}
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : (
+            <div className="flex items-center gap-2 text-neutral-400">
+              <RotateCcw size={14} className="opacity-20" />
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Posição Inicial</span>
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* 2. Variation Explorer (Continuations) */}
-        <div className="card-surface p-5 bg-white border border-neutral-100 shadow-sm">
+        <div className="card-surface p-5 bg-white border border-neutral-100 shadow-sm min-h-[160px]">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <RefreshCw size={16} className="text-blue-500" />
