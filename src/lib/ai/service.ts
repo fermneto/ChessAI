@@ -5,13 +5,10 @@ const groq = new Groq({
 });
 
 /**
- * Serviço centralizado de IA
- * Por padrão usa Groq (Llama 3) para alta disponibilidade e velocidade.
+ * IA
+ * Groq (Llama 3)
  */
 export const aiService = {
-  /**
-   * Gera conteúdo estruturado (JSON)
-   */
   async generateJSON<T>(prompt: string, model: string = 'llama-3.3-70b-versatile'): Promise<T> {
     try {
       const chatCompletion = await groq.chat.completions.create({
@@ -38,9 +35,7 @@ export const aiService = {
     }
   },
 
-  /**
-   * Gera texto simples
-   */
+
   async generateText(prompt: string, model: string = 'llama-3.3-70b-versatile'): Promise<string> {
     try {
       const chatCompletion = await groq.chat.completions.create({

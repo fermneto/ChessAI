@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 
 /**
- * @api {get} /api/v1/ai/tip Obter dica diária
+ * @api {get} /api/v1/ai/tip daily
  * @apiVersion 1.0.0
  * @apiGroup AI
  * @apiPermission Authenticated
@@ -27,7 +27,7 @@ export async function GET() {
   } catch (error: any) {
     console.error('[API v1 AI Tip Error]:', error);
     return NextResponse.json({
-      status: 'success', // Fallback amigável
+      status: 'success', // Fallback 
       data: {
         title: "Abertura Italiana",
         content: "Desenvolva o bispo para c4 visando o ponto fraco f7. É uma das aberturas mais sólidas para iniciantes e mestres."

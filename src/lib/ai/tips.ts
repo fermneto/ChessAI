@@ -11,7 +11,6 @@ export async function getDailyTip(): Promise<DailyTip> {
     const supabase = await createClient();
     const today = new Date().toISOString().split('T')[0];
 
-    // 1. Tentar buscar do banco de dados primeiro
     const { data: existingTip } = await (supabase.from('daily_tips') as any)
       .select('title, content')
       .eq('date', today)
@@ -21,7 +20,6 @@ export async function getDailyTip(): Promise<DailyTip> {
       return existingTip as DailyTip;
     }
 
-    // 2. Se não existir, gerar com IA
     const prompt = `
       Você é um mestre de xadrez pedagógico. Gere uma "Dica de Xadrez do Dia".
       Pode ser sobre uma abertura, um conceito tático, estratégia de meio-jogo ou final.
@@ -36,7 +34,6 @@ export async function getDailyTip(): Promise<DailyTip> {
 
     const aiTip = await aiService.generateJSON<DailyTip>(prompt);
 
-    // 3. Salvar no banco para cache (usando upsert para evitar erros de duplicidade)
     await (supabase.from('daily_tips') as any)
       .upsert({
         date: today,

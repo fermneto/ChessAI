@@ -57,7 +57,7 @@ export default function AICommentary({
       });
 
       const resJson = await response.json();
-      
+
       if (resJson.status === 'error') {
         throw new Error(resJson.message || 'Erro ao gerar análise');
       }
@@ -68,7 +68,7 @@ export default function AICommentary({
     } catch (err: any) {
       setError(err.message || 'Não foi possível carregar a explicação da IA.');
       console.error(err);
-      
+
       // Smart pause: if quota error, disable auto-explain for 60s
       if (err.message?.includes('limite de consultas') || err.message?.includes('Quota')) {
         setAutoExplain(false);
@@ -92,7 +92,7 @@ export default function AICommentary({
 
     const timer = setTimeout(() => {
       fetchCommentary();
-    }, 1000); // Reduzido para 1s devido à velocidade da Groq
+    }, 1000);
 
     return () => clearTimeout(timer);
   }, [fen, autoExplain]);
@@ -105,15 +105,14 @@ export default function AICommentary({
             <Sparkles size={16} className="text-blue-300" />
             <h3 className="font-bold text-[0.8125rem] uppercase tracking-wider text-blue-100">OTEN AI</h3>
           </div>
-          
+
           {/* Auto-Explain Toggle */}
-          <button 
+          <button
             onClick={() => setAutoExplain(!autoExplain)}
-            className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full border transition-all text-[9px] font-black uppercase tracking-tighter ${
-              autoExplain 
-                ? 'bg-blue-400/20 border-blue-400/30 text-blue-300' 
+            className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full border transition-all text-[9px] font-black uppercase tracking-tighter ${autoExplain
+                ? 'bg-blue-400/20 border-blue-400/30 text-blue-300'
                 : 'bg-white/5 border-white/10 text-white/40'
-            }`}
+              }`}
           >
             <div className={`w-1 h-1 rounded-full ${autoExplain ? 'bg-blue-300 animate-pulse' : 'bg-white/20'}`} />
             Auto: {autoExplain ? 'ON' : 'OFF'}
@@ -160,11 +159,11 @@ export default function AICommentary({
                 <AlertCircle size={24} className="text-orange-400" />
               </div>
               <p className="text-[0.8125rem] leading-relaxed text-orange-100 font-medium max-w-[200px]">
-                {error.includes('Quota') 
-                  ? 'O treinador está descansando um pouco. Tente novamente em 30 segundos.' 
+                {error.includes('Quota')
+                  ? 'O treinador está descansando um pouco. Tente novamente em 30 segundos.'
                   : error}
               </p>
-              <button 
+              <button
                 onClick={fetchCommentary}
                 className="mt-6 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-xs font-bold transition-all border border-white/10"
               >

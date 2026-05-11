@@ -10,26 +10,24 @@ export function useStockfish() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   useEffect(() => {
-    // Carregar o Stockfish 16 local da pasta /public usando o nome correto do arquivo
     const stockfishWorker = new Worker('/stockfish-nnue-16.js');
-    
+
     stockfishWorker.onmessage = (e) => {
       const line = e.data;
 
-      
+
       if (line.includes('info') && line.includes(' score ')) {
         const parts = line.split(' ');
-        
+
         // CP
         const cpIndex = parts.indexOf('cp');
         if (cpIndex !== -1 && parts[cpIndex + 1]) {
-          // Detectar turno para perspectiva
           const turn = lastFenRef.current.split(' ')[1];
           let score = parseInt(parts[cpIndex + 1]) / 100;
           if (turn === 'b') score = -score;
           setEvaluation(score > 0 ? `+${score.toFixed(1)}` : score.toFixed(1));
         }
-        
+
         // Mate
         const mateIndex = parts.indexOf('mate');
         if (mateIndex !== -1 && parts[mateIndex + 1]) {
@@ -39,14 +37,14 @@ export function useStockfish() {
           setEvaluation(`M${mateScore}`);
         }
 
-        // PV (Melhor Linha)
+        // PV 
         const pvIndex = parts.indexOf('pv');
         if (pvIndex !== -1) {
-          const pvMoves = parts.slice(pvIndex + 1, pvIndex + 8); // Pegar os próximos 7 lances
+          const pvMoves = parts.slice(pvIndex + 1, pvIndex + 8);
           setBestLine(pvMoves);
         }
       }
-      
+
       if (line.startsWith('bestmove')) {
         const parts = line.split(' ');
         if (parts[1] && parts[1] !== '(none)') {
@@ -56,12 +54,12 @@ export function useStockfish() {
       }
     };
 
-    // Configuração Stockfish 16 com NNUE
+    //Stockfish 16 NNUE
     stockfishWorker.postMessage('uci');
     stockfishWorker.postMessage('setoption name Use NNUE value true');
     stockfishWorker.postMessage('setoption name EvalFile value nn-5af11540bbfe.nnue');
     stockfishWorker.postMessage('isready');
-    
+
     setEngine(stockfishWorker);
 
     return () => {

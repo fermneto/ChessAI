@@ -3,13 +3,13 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Chess } from 'chess.js';
 import CustomChessBoard from '@/components/chess/CustomChessBoard';
-import { 
-  ChevronLeft, 
-  ChevronRight, 
-  RotateCcw, 
+import {
+  ChevronLeft,
+  ChevronRight,
+  RotateCcw,
   RefreshCw,
-  Save, 
-  Play, 
+  Save,
+  Play,
   History,
   Brain,
   Zap,
@@ -21,11 +21,11 @@ import { lookupOpening } from '@/lib/chess/openingDatabase';
 import { motion } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
 import type { Database } from '@/types/database';
-import { 
-  type ChessTree, 
-  type MoveNode, 
-  createEmptyTree, 
-  addMoveToTree, 
+import {
+  type ChessTree,
+  type MoveNode,
+  createEmptyTree,
+  addMoveToTree,
   getPathToNode,
   getVariations,
   getFullLineInfo,
@@ -66,18 +66,18 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
   const [manualArrows, setManualArrows] = useState<any[]>([]);
   const [currentOpening, setCurrentOpening] = useState<string | null>(null);
   const [selectedSquare, setSelectedSquare] = useState<string | null>(null);
-  
-  // Árvore de lances
+
+  // MoveTree
   const [tree, setTree] = useState<ChessTree>(createEmptyTree(fen));
   const [currentNodeId, setCurrentNodeId] = useState<string>('root');
   const [renderTick, setRenderTick] = useState(0);
-  
+
   const { evaluation, bestMove, bestLine, isAnalyzing, analyzePosition } = useStockfish();
 
   const forceUpdate = useCallback(() => setRenderTick(t => t + 1), []);
   const supabase = createClient();
 
-  // Contador de tempo de estudo
+  // Stdtime
   useEffect(() => {
     const interval = setInterval(() => {
       setSessionSeconds(s => s + 1);
@@ -91,7 +91,7 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
     return `${m}:${s.toString().padStart(2, '0')}`;
   };
 
-  // Calcular a porcentagem da barra de vantagem
+  // Pcteval
   const getEvalPercentage = () => {
     if (evaluation.startsWith('M')) {
       return evaluation.includes('-') ? 0 : 100;
@@ -102,7 +102,7 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
     return Math.min(Math.max(percent, 5), 95);
   };
 
-  // Analisar a posição quando o FEN mudar e o motor estiver ligado
+  // AnalisStock
   useEffect(() => {
     if (engineEnabled && isMounted) {
       analyzePosition(gameRef.current.fen());
@@ -119,15 +119,15 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
     setIsMounted(true);
   }, []);
 
-  // Novo: Identificação de abertura aprimorada (Local + API com detecção de transposição)
+  // OpenAPiDetect
   useEffect(() => {
     if (!isMounted) return;
-    
+
     let isCancelled = false;
-    
+
     async function identify() {
       const currentFen = gameRef.current.fen();
-      
+
       try {
         const info = await lookupOpening(currentFen);
         if (info && !isCancelled) {
@@ -142,7 +142,6 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
     return () => { isCancelled = true; };
   }, [fen, isMounted]);
 
-  // Notificar o pai sobre mudanças no estado de estudo
   useEffect(() => {
     if (onStateChange && isMounted) {
       onStateChange({
@@ -163,7 +162,6 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
     if (!saved) return;
 
     if (saved.nodes) {
-      // Já é uma árvore
       setTree(saved as ChessTree);
       setCurrentNodeId(saved.activeNodeId || saved.rootId || 'root');
       const activeNode = saved.nodes[saved.activeNodeId || saved.rootId || 'root'];
@@ -219,7 +217,7 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
       if (move) {
         const newFen = gameRef.current.fen();
         const { tree: newTree, nodeId } = addMoveToTree(tree, currentNodeId, move.san, newFen);
-        
+
         setTree(newTree);
         setCurrentNodeId(nodeId);
         setFen(newFen);
@@ -292,11 +290,10 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setEngineEnabled(!engineEnabled)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-sm ${
-                  engineEnabled 
-                    ? 'bg-blue-600 text-white shadow-blue-500/20' 
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-sm ${engineEnabled
+                    ? 'bg-blue-600 text-white shadow-blue-500/20'
                     : 'bg-neutral-100 text-neutral-400'
-                }`}
+                  }`}
               >
                 <Zap size={14} className={engineEnabled ? 'fill-white' : ''} />
                 {engineEnabled ? 'Motor ON' : 'Ligar Motor'}
@@ -304,10 +301,9 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
 
               {engineEnabled && (
                 <div className="flex items-center gap-3 animate-in fade-in slide-in-from-left-2">
-                  <div className={`px-3 py-1.5 rounded-lg font-mono font-bold text-sm shadow-inner ${
-                    evaluation.startsWith('+') ? 'bg-green-50 text-green-700' : 
-                    evaluation.startsWith('-') ? 'bg-red-50 text-red-700' : 'bg-neutral-50 text-neutral-600'
-                  }`}>
+                  <div className={`px-3 py-1.5 rounded-lg font-mono font-bold text-sm shadow-inner ${evaluation.startsWith('+') ? 'bg-green-50 text-green-700' :
+                      evaluation.startsWith('-') ? 'bg-red-50 text-red-700' : 'bg-neutral-50 text-neutral-600'
+                    }`}>
                     {evaluation}
                   </div>
                   {bestMove && !isAnalyzing && (
@@ -346,10 +342,10 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
                 selectedSquare={selectedSquare}
                 lastMove={lastMove}
                 legalMoves={legalMoves}
-                arrows={engineEnabled && bestMove ? [{ 
-                  from: bestMove.slice(0, 2), 
+                arrows={engineEnabled && bestMove ? [{
+                  from: bestMove.slice(0, 2),
                   to: bestMove.slice(2, 4),
-                  color: "rgba(34, 197, 94, 0.6)" 
+                  color: "rgba(34, 197, 94, 0.6)"
                 }] : []}
                 manualArrows={manualArrows}
                 onManualArrowsChange={setManualArrows}
@@ -377,7 +373,7 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
           <div className="flex items-center justify-between mt-1 pt-2 border-t border-neutral-50 gap-3 max-w-[600px] mx-auto">
             {/* Nav Controls - Compact */}
             <div className="flex items-center bg-neutral-50 p-1 rounded-xl border border-neutral-100">
-              <button 
+              <button
                 onClick={() => {
                   gameRef.current.reset();
                   setFen(gameRef.current.fen());
@@ -391,7 +387,7 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
                 <RotateCcw size={16} />
               </button>
               <div className="w-px h-3 bg-neutral-200 mx-0.5" />
-              <button 
+              <button
                 onClick={undoMove}
                 disabled={currentNodeId === tree.rootId}
                 className="p-2 rounded-lg hover:bg-white hover:shadow-sm text-neutral-400 hover:text-neutral-600 disabled:opacity-20 transition-all"
@@ -399,7 +395,7 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
               >
                 <ChevronLeft size={18} />
               </button>
-              <button 
+              <button
                 onClick={resetBoard}
                 disabled={currentNodeId === tree.rootId}
                 className="p-2 rounded-lg hover:bg-white hover:shadow-sm text-neutral-400 hover:text-neutral-600 disabled:opacity-20 transition-all"
@@ -470,11 +466,11 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
                       <div key={i} className="flex items-center gap-2 text-sm py-1 border-b border-neutral-50 last:border-0">
                         <span className="w-5 text-neutral-300 font-mono text-[10px]">{i + 1}.</span>
                         <div className="flex-1 grid grid-cols-2 gap-2">
-                          <span className={`px-2 py-0.5 rounded ${currentLine.length === i*2 + 1 ? 'bg-blue-50 text-blue-700 font-bold' : 'text-neutral-700'}`}>
+                          <span className={`px-2 py-0.5 rounded ${currentLine.length === i * 2 + 1 ? 'bg-blue-50 text-blue-700 font-bold' : 'text-neutral-700'}`}>
                             {currentLine[i * 2]}
                           </span>
                           {currentLine[i * 2 + 1] && (
-                            <span className={`px-2 py-0.5 rounded ${currentLine.length === i*2 + 2 ? 'bg-blue-50 text-blue-700 font-bold' : 'text-neutral-700'}`}>
+                            <span className={`px-2 py-0.5 rounded ${currentLine.length === i * 2 + 2 ? 'bg-blue-50 text-blue-700 font-bold' : 'text-neutral-700'}`}>
                               {currentLine[i * 2 + 1]}
                             </span>
                           )}
@@ -497,17 +493,16 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
                 Stockfish 16
               </div>
             </div>
-            
+
             <div className="space-y-4">
               <div className="flex items-center gap-3">
-                <div className={`w-10 text-xs font-mono font-bold text-right ${
-                  evaluation.startsWith('+') ? 'text-green-400' : 
-                  evaluation.startsWith('-') ? 'text-red-400' : 'text-blue-400'
-                }`}>
+                <div className={`w-10 text-xs font-mono font-bold text-right ${evaluation.startsWith('+') ? 'text-green-400' :
+                    evaluation.startsWith('-') ? 'text-red-400' : 'text-blue-400'
+                  }`}>
                   {evaluation}
                 </div>
                 <div className="flex-1 h-2 bg-white/10 rounded-full overflow-hidden">
-                  <motion.div 
+                  <motion.div
                     initial={false}
                     animate={{ width: `${getEvalPercentage()}%` }}
                     transition={{ type: 'spring', stiffness: 50, damping: 20 }}
@@ -515,7 +510,7 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
                   />
                 </div>
               </div>
-              
+
               <div className="p-3 rounded-lg bg-white/5 border border-white/5">
                 <div className="text-[10px] text-neutral-500 font-bold uppercase mb-1">Melhor linha</div>
                 <div className="flex flex-wrap gap-x-2 gap-y-1 text-xs text-neutral-300 font-mono">
@@ -543,7 +538,7 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
         {/* 1. Breadcrumbs (Current Path) */}
         {getFullLineInfo(tree, currentNodeId).length > 0 && (
           <div className="flex items-center gap-2 overflow-x-auto py-2 no-scrollbar">
-            <button 
+            <button
               onClick={() => resetBoard()}
               className="p-2 rounded-lg hover:bg-neutral-100 text-neutral-400 transition-colors shrink-0"
               title="Início"
@@ -560,11 +555,10 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
                       gameRef.current = new Chess(tree.nodes[step.nodeId].fen);
                       setFen(tree.nodes[step.nodeId].fen);
                     }}
-                    className={`text-[0.8125rem] font-medium px-2 py-1 rounded-md transition-all whitespace-nowrap ${
-                      idx === getFullLineInfo(tree, currentNodeId).length - 1
+                    className={`text-[0.8125rem] font-medium px-2 py-1 rounded-md transition-all whitespace-nowrap ${idx === getFullLineInfo(tree, currentNodeId).length - 1
                         ? 'text-blue-600 font-bold bg-blue-50'
                         : 'text-neutral-500 hover:text-neutral-900 hover:bg-neutral-50'
-                    }`}
+                      }`}
                   >
                     {idx % 2 === 0 ? `${Math.floor(idx / 2) + 1}. ` : ''}{step.san}
                   </button>

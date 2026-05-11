@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 
 /**
- * @api {post} /api/v1/ai/comment Pedir comentário estratégico
+ * @api {post} /api/v1/ai/coment
  * @apiVersion 1.0.0
  * @apiGroup AI
  * @apiPermission Authenticated
@@ -22,7 +22,7 @@ export async function POST(req: Request) {
 
     const body = await req.json();
 
-    // Validação de entrada
+    // Context
     const {
       fen,
       history,
@@ -78,7 +78,7 @@ export async function POST(req: Request) {
       ${previousComments && previousComments.length > 0 ? previousComments.map((c: string, i: number) => `Comentário ${i + 1}: ${c}`).join('\n') : 'Nenhum comentário anterior.'}
 
       INSTRUÇÕES CRÍTICAS:
-      ${engineEnabled 
+      ${engineEnabled
         ? `1. ANALISE PROFUNDAMENTE a "Linha Recomendada" (${bestLine ? bestLine.join(' ') : 'N/A'}). Explique o MOTIVO tático/estratégico desses lances.
            2. Explique o PORQUÊ de a avaliação ser ${evaluation}. Se estiver vantajoso, diga como converter; se estiver pior, diga como lutar.`
         : `1. FOQUE EM CONCEITOS GERAIS: estrutura de peões, segurança do rei, desenvolvimento e controle do centro.
@@ -98,8 +98,8 @@ export async function POST(req: Request) {
       throw new Error('A IA não retornou uma resposta válida.');
     }
 
-    return NextResponse.json({ 
-      status: 'success', 
+    return NextResponse.json({
+      status: 'success',
       data: { commentary: text },
       meta: { timestamp: new Date().toISOString() }
     });

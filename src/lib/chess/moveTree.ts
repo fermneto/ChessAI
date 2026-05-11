@@ -91,26 +91,24 @@ export const addMoveToTree = (
 };
 
 /**
- * Retorna a lista de lances (SAN) desde a raiz até um nó específico
- * @param tree A árvore de lances
- * @param nodeId O ID do nó de destino
+ * @param tree
+ * @param nodeId
  */
 export const getPathToNode = (tree: ChessTree, nodeId: string): string[] => {
   const path: string[] = [];
   let current = tree.nodes[nodeId];
-  
+
   while (current && current.parentId !== null) {
     path.unshift(current.san);
     current = tree.nodes[current.parentId];
   }
-  
+
   return path;
 };
 
 /**
- * Retorna todos os nós filhos (variantes) de um nó específico
- * @param tree A árvore de lances
- * @param nodeId O ID do nó pai
+ * @param tree
+ * @param nodeId
  */
 export const getVariations = (tree: ChessTree, nodeId: string): MoveNode[] => {
   const node = tree.nodes[nodeId];
@@ -118,9 +116,7 @@ export const getVariations = (tree: ChessTree, nodeId: string): MoveNode[] => {
   return node.children.map(id => tree.nodes[id]);
 };
 
-/**
- * Estrutura de dados para representar um passo no caminho atual com suas alternativas
- */
+
 export interface PathStep {
   nodeId: string;
   san: string;
@@ -128,9 +124,8 @@ export interface PathStep {
 }
 
 /**
- * Obtém informações detalhadas da linha atual, incluindo variantes irmãs em cada passo
- * @param tree A árvore de lances
- * @param nodeId O ID do nó atual
+ * @param tree
+ * @param nodeId
  */
 export const getFullLineInfo = (tree: ChessTree, nodeId: string): PathStep[] => {
   const path: PathStep[] = [];

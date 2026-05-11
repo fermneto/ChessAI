@@ -184,7 +184,7 @@ export default function ExploreDetailClient({ repertoire, authorName }: Props) {
             {/* Notice: read-only */}
             <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
               <p className="text-xs text-blue-600 font-medium leading-relaxed">
-                📖 Este é um repertório público. Você pode navegar pelas linhas, mas não pode editá-lo.
+                Este é um repertório público. Você pode navegar pelas linhas, mas não pode editá-lo.
               </p>
             </div>
           </div>
