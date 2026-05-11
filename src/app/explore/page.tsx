@@ -9,6 +9,8 @@ export const metadata: Metadata = {
   description: 'Explore repertórios de abertura publicados pela comunidade.',
 };
 
+export const dynamic = 'force-dynamic';
+
 export default async function ExplorePage({
   searchParams,
 }: {

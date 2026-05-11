@@ -26,6 +26,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
+export const dynamic = 'force-dynamic';
+
 export default async function ExploreDetailPage({ params }: Props) {
   const { id } = await params;
   if (!isValidUUID(id)) notFound();
@@ -35,7 +37,13 @@ export default async function ExploreDetailPage({ params }: Props) {
   if (!user) redirect('/auth/login');
 
   const { data, error } = await (supabase.from('repertoires') as any)
-    .select('*')
+    .select(`
+      *,
+      profiles:user_id (
+        full_name,
+        username
+      )
+    `)
     .eq('id', id)
     .eq('is_public', true)
     .single();
@@ -43,14 +51,8 @@ export default async function ExploreDetailPage({ params }: Props) {
   if (error || !data) notFound();
 
   const repertoire = data as any;
-
-  // Fetch author profile
-  const { data: profile } = await (supabase.from('profiles') as any)
-    .select('full_name, username')
-    .eq('id', repertoire.user_id)
-    .single();
-
-  const authorName = profile?.full_name || profile?.username || 'Anônimo';
+  const authorName = repertoire.profiles?.full_name || repertoire.profiles?.username || 'Anônimo';
 
   return <ExploreDetailClient repertoire={repertoire} authorName={authorName} />;
 }
+

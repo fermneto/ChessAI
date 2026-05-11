@@ -94,6 +94,7 @@ export default function RepertoireDetail({ repertoire: initial }: Props) {
     } else if (updatedData) {
       setRepertoire(updatedData);
       setEditing(false);
+      router.refresh();
     }
     setLoading(false);
   };
@@ -128,6 +129,7 @@ export default function RepertoireDetail({ repertoire: initial }: Props) {
 
     if (!updateError && data) {
       setRepertoire(data as Repertoire);
+      router.refresh();
     } else if (updateError) {
       setError(updateError.message);
     }
