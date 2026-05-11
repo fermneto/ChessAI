@@ -21,27 +21,36 @@ export default async function ExplorePage({
   const { q, color } = await searchParams;
 
   let query = (supabase.from('repertoires') as any)
-    .select('id, name, description, color, opening_name, eco_code, tags, total_moves_studied, created_at, user_id')
+    .select(`
+      id, 
+      name, 
+      description, 
+      color, 
+      opening_name, 
+      eco_code, 
+      tags, 
+      total_moves_studied, 
+      created_at, 
+      user_id,
+      profiles:user_id (
+        full_name,
+        username
+      )
+    `)
     .eq('is_public', true)
-    .order('created_at', { ascending: false });
+    .ilike('name', q ? `%${q}%` : '%');
 
-  if (q) query = query.ilike('name', `%${q}%`);
-  if (color && (color === 'white' || color === 'black')) query = query.eq('color', color);
+  if (color && (color === 'white' || color === 'black')) {
+    query = query.eq('color', color);
+  }
 
-  const { data: repertoires } = await query.limit(60);
-
-  // Fetch profile names for authors
-  const userIds = [...new Set((repertoires || []).map((r: any) => r.user_id))] as string[];
-  const { data: profiles } = await (supabase.from('profiles') as any)
-    .select('id, full_name, username')
-    .in('id', userIds);
-
-  const profileMap: Record<string, string> = {};
-  (profiles || []).forEach((p: any) => {
-    profileMap[p.id] = p.full_name || p.username || 'Anônimo';
-  });
+  const { data: repertoires } = await query
+    .order('created_at', { ascending: false })
+    .limit(60);
 
   const items = (repertoires || []) as any[];
+
+
 
   return (
     <div className="min-h-screen bg-neutral-50">
@@ -140,7 +149,7 @@ export default async function ExplorePage({
                     <div className="flex items-center gap-3 mt-3">
                       <span className="flex items-center gap-1 text-[10px] text-neutral-400 font-bold uppercase tracking-wider">
                         <BookOpen size={11} />
-                        por {profileMap[rep.user_id] || 'Anônimo'}
+                        por {rep.profiles?.full_name || rep.profiles?.username || 'Anônimo'}
                       </span>
                       <span className="flex items-center gap-1 text-[10px] text-neutral-400 font-bold uppercase tracking-wider">
                         <BarChart3 size={11} />

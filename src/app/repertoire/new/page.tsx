@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Crown, CircleDot } from 'lucide-react';
+import { ArrowLeft, Crown, CircleDot, Globe } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import type { Database } from '@/types/database';
 
@@ -38,6 +38,7 @@ export default function NewRepertoirePage() {
   const [description, setDescription] = useState('');
   const [color, setColor] = useState<'white' | 'black'>('white');
   const [openingName, setOpeningName] = useState('');
+  const [isPublic, setIsPublic] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -62,7 +63,7 @@ export default function NewRepertoirePage() {
       color,
       opening_name: openingName.trim() || null,
       moves: {},
-      is_public: false,
+      is_public: isPublic,
       tags: [],
     };
 
@@ -211,6 +212,34 @@ export default function NewRepertoirePage() {
                 onChange={(e) => setDescription(e.target.value)}
                 className="input-field resize-none"
               />
+            </div>
+
+            {/* Public visibility toggle */}
+            <div className="flex items-center justify-between p-4 rounded-xl border border-neutral-100 bg-white/50">
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${isPublic ? 'bg-blue-50 text-blue-500' : 'bg-neutral-50 text-neutral-400'}`}>
+                  <Globe size={20} />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-neutral-800">Tornar público</p>
+                  <p className="text-xs text-neutral-500">Outros usuários poderão ver seu repertório no explorador.</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsPublic(!isPublic)}
+                className={`
+                  relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none
+                  ${isPublic ? 'bg-blue-600' : 'bg-neutral-200'}
+                `}
+              >
+                <span
+                  className={`
+                    inline-block h-4 w-4 transform rounded-full bg-white transition-transform
+                    ${isPublic ? 'translate-x-6' : 'translate-x-1'}
+                  `}
+                />
+              </button>
             </div>
 
             {/* Actions */}

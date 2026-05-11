@@ -18,15 +18,15 @@
     "framer-motion": "latest",
     "groq-sdk": "^1.1.2",
     "lucide-react": "latest",
-    "next": "15",
-    "react": "19",
-    "react-dom": "19",
-    "uuid": "11.0.3"
+    "next": "^16.2.6",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
+    "uuid": "^11.1.1"
   },
   "devDependencies": {
     "@types/node": "latest",
-    "@types/react": "latest",
-    "@types/react-dom": "latest",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
     "@types/uuid": "^10.0.0",
     "autoprefixer": "latest",
     "postcss": "latest",
