@@ -351,11 +351,11 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
     <div className="flex flex-col gap-6">
       <div className="grid lg:grid-cols-12 gap-6">
         <div className="lg:col-span-7 flex flex-col gap-2">
-          <div className="bg-white p-3 rounded-2xl shadow-sm border border-neutral-100 flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
+          <div className="bg-white p-3 rounded-2xl shadow-sm border border-neutral-100 flex items-center justify-between gap-4 min-h-[58px]">
+            <div className="flex items-center gap-3 flex-1 min-w-0">
               <button
                 onClick={() => setEngineEnabled(!engineEnabled)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-sm ${engineEnabled
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-sm shrink-0 ${engineEnabled
                     ? 'bg-blue-600 text-white shadow-blue-500/20'
                     : 'bg-neutral-100 text-neutral-400'
                   }`}
@@ -364,32 +364,33 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
                 {engineEnabled ? 'Motor ON' : 'Ligar Motor'}
               </button>
 
-              {engineEnabled && (
-                <div className="flex items-center gap-3 animate-in fade-in slide-in-from-left-2">
-                  <div className={`px-3 py-1.5 rounded-lg font-mono font-bold text-sm shadow-inner ${evaluation.startsWith('+') ? 'bg-green-50 text-green-700' :
-                      evaluation.startsWith('-') ? 'bg-red-50 text-red-700' : 'bg-neutral-50 text-neutral-600'
-                    }`}>
-                    {evaluation}
+              <div className="flex items-center gap-3 min-w-0 overflow-hidden">
+                {engineEnabled ? (
+                  <div className="flex items-center gap-3 animate-in fade-in slide-in-from-left-2 overflow-hidden">
+                    <div className={`px-3 py-1.5 rounded-lg font-mono font-bold text-sm shadow-inner shrink-0 ${evaluation.startsWith('+') ? 'bg-green-50 text-green-700' :
+                        evaluation.startsWith('-') ? 'bg-red-50 text-red-700' : 'bg-neutral-50 text-neutral-600'
+                      }`}>
+                      {evaluation}
+                    </div>
+                    {bestMove && !isAnalyzing && (
+                      <div className="text-xs font-medium text-neutral-500 bg-neutral-50 px-3 py-1.5 rounded-lg border border-neutral-100 truncate">
+                        Melhor: <span className="text-blue-600 font-bold uppercase">{bestMove}</span>
+                      </div>
+                    )}
+                    {isAnalyzing && (
+                      <div className="flex items-center gap-2 text-[10px] text-neutral-400 font-medium shrink-0">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
+                        <span className="hidden xs:inline">Analisando...</span>
+                      </div>
+                    )}
                   </div>
-                  {bestMove && !isAnalyzing && (
-                    <div className="text-xs font-medium text-neutral-500 bg-neutral-50 px-3 py-1.5 rounded-lg border border-neutral-100">
-                      Melhor lance: <span className="text-blue-600 font-bold uppercase">{bestMove}</span>
-                    </div>
-                  )}
-                  {isAnalyzing && (
-                    <div className="flex items-center gap-2 text-[10px] text-neutral-400 font-medium">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
-                      Analisando...
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-            {!engineEnabled && (
-              <div className="text-[10px] font-medium text-neutral-400 italic">
-                Stockfish 16.1.0 pronto para análise
+                ) : (
+                  <div className="text-[10px] font-medium text-neutral-400 italic animate-in fade-in truncate">
+                    Stockfish 16.1.0 pronto para análise
+                  </div>
+                )}
               </div>
-            )}
+            </div>
           </div>
 
           <div
@@ -508,14 +509,16 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
               </span>
             </div>
 
-            {currentOpening && (
-              <div className="px-4 py-2 bg-blue-50/50 border-b border-blue-100 flex items-center gap-2 animate-in fade-in slide-in-from-top-1">
-                <Book size={12} className="text-blue-500" />
-                <span className="text-[11px] font-bold text-blue-700 truncate">
-                  {currentOpening}
-                </span>
-              </div>
-            )}
+            <div className="min-h-[37px] border-b border-neutral-100 bg-blue-50/20">
+              {currentOpening && (
+                <div className="px-4 py-2 flex items-center gap-2 animate-in fade-in slide-in-from-top-1">
+                  <Book size={12} className="text-blue-500" />
+                  <span className="text-[11px] font-bold text-blue-700 truncate">
+                    {currentOpening}
+                  </span>
+                </div>
+              )}
+            </div>
 
             <div className="p-4 overflow-y-auto max-h-[300px]">
               {getPathToNode(tree, currentNodeId).length === 0 ? (

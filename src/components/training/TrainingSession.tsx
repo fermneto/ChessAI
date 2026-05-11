@@ -396,38 +396,53 @@ export default function TrainingSession({ repertoire }: Props) {
           </button>
         </div>
 
-        <div className="w-full max-w-[550px] relative">
+        <div className="w-full max-w-[550px] relative aspect-square">
           {!currentPuzzle && !isLoadingPuzzle && mode === 'repertoire' ? (
-            <div className="aspect-square bg-neutral-800 rounded-2xl flex flex-col items-center justify-center text-center p-8 border border-dashed border-white/10">
+            <div className="w-full h-full bg-neutral-800 rounded-2xl flex flex-col items-center justify-center text-center p-8 border border-dashed border-white/10">
               <div className="text-4xl mb-4 opacity-20">📭</div>
               <h3 className="text-lg font-bold text-white mb-2">Repertório Vazio</h3>
               <p className="text-sm text-neutral-500 mb-6">Sua linha de abertura ainda não foi reconhecida. Adicione mais lances ao seu repertório no modo de estudo para liberar os exercícios.</p>
               <Link href={`/repertoire/${repertoire.id}`} className="btn btn-primary btn-sm">Ir para Estudo</Link>
             </div>
           ) : (
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={currentPuzzle?.id || 'empty'}
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 1.02 }}
-                transition={{ duration: 0.3 }}
-              >
-                <CustomChessBoard
-                  position={fen}
-                  onSquareClick={onSquareClick}
-                  boardOrientation={mode === 'repertoire'
-                    ? repertoire.color
-                    : (currentPuzzle ? (new Chess(currentPuzzle.fen).turn() === 'w' ? 'black' : 'white') : repertoire.color)
-                  }
-                  selectedSquare={selectedSquare}
-                  lastMove={lastMove}
-                  legalMoves={legalMoves}
-                  manualArrows={manualArrows}
-                  onManualArrowsChange={setManualArrows}
-                />
-              </motion.div>
-            </AnimatePresence>
+            <div className="w-full h-full relative">
+              <AnimatePresence mode="wait">
+                {isLoadingPuzzle ? (
+                  <motion.div
+                    key="loading"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="absolute inset-0 flex items-center justify-center bg-neutral-900/20 rounded-2xl backdrop-blur-sm"
+                  >
+                    <div className="w-10 h-10 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin" />
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key={currentPuzzle?.id || 'empty'}
+                    initial={{ opacity: 0, scale: 0.98 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 1.02 }}
+                    transition={{ duration: 0.3 }}
+                    className="w-full h-full"
+                  >
+                    <CustomChessBoard
+                      position={fen}
+                      onSquareClick={onSquareClick}
+                      boardOrientation={mode === 'repertoire'
+                        ? repertoire.color
+                        : (currentPuzzle ? (new Chess(currentPuzzle.fen).turn() === 'w' ? 'black' : 'white') : repertoire.color)
+                      }
+                      selectedSquare={selectedSquare}
+                      lastMove={lastMove}
+                      legalMoves={legalMoves}
+                      manualArrows={manualArrows}
+                      onManualArrowsChange={setManualArrows}
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           )}
 
           {/* Feedback Overlay */}

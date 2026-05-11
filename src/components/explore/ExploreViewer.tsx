@@ -229,12 +229,14 @@ export default function ExploreViewer({ repertoire, onStateChange }: Props) {
 
   return (
     <div className="space-y-4">
-      {/* Opening label */}
-      {currentOpening && (
-        <div className="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-100 inline-block">
-          {currentOpening}
-        </div>
-      )}
+      {/* Opening label area - fixed height to prevent layout shift */}
+      <div className="min-h-[34px]">
+        {currentOpening && (
+          <div className="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-100 inline-block animate-in fade-in slide-in-from-top-1">
+            {currentOpening}
+          </div>
+        )}
+      </div>
 
       {/* Board */}
       <CustomChessBoard
