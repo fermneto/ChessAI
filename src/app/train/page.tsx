@@ -52,7 +52,7 @@ export default async function TrainSelectionPage() {
             <div className="text-4xl mb-4 text-neutral-200">♟️</div>
             <h3 className="text-lg font-semibold text-neutral-800 mb-2">Sem repertórios salvos</h3>
             <p className="text-neutral-500 mb-6">Você precisa criar um repertório antes de começar a treinar.</p>
-            <Link href="/repertoire/new" className="btn btn-primary">
+            <Link href="/repertoire/new" className="btn btn-primary btn-md">
               Criar Repertório
             </Link>
           </div>
@@ -97,7 +97,7 @@ export default async function TrainSelectionPage() {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="absolute right-4 bottom-4 w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center text-orange-500 opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0 shadow-sm border border-orange-100">
                   <Play size={16} fill="currentColor" />
                 </div>
