@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, ChevronRight, Zap } from 'lucide-react';
+import { Menu, X, ChevronRight, Zap, LayoutDashboard } from 'lucide-react';
 import clsx from 'clsx';
+import { createClient } from '@/lib/supabase/client';
 
 const navLinks = [
   { label: 'Recursos', href: '#features' },
@@ -14,12 +15,30 @@ const navLinks = [
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const supabase = createClient();
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handler, { passive: true });
-    return () => window.removeEventListener('scroll', handler);
-  }, []);
+    
+    // Check initial session
+    const checkUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+    };
+    checkUser();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => {
+      window.removeEventListener('scroll', handler);
+      subscription.unsubscribe();
+    };
+  }, [supabase.auth]);
 
   return (
     <>
@@ -66,13 +85,22 @@ export default function Navbar() {
 
               {/* CTA Buttons - Column 3 */}
               <div className="hidden md:flex-1 md:flex items-center justify-end gap-3">
-                <Link href="/auth/login" className="btn btn-ghost btn-sm">
-                  Entrar
-                </Link>
-                <Link href="/auth/signup" className="btn btn-primary btn-sm gap-1.5 font-bold">
-                  Começar grátis
-                  <ChevronRight size={14} strokeWidth={2.5} />
-                </Link>
+                {user ? (
+                  <Link href="/dashboard" className="btn btn-primary btn-sm gap-2">
+                    <LayoutDashboard size={16} />
+                    Dashboard
+                  </Link>
+                ) : (
+                  <>
+                    <Link href="/auth/login" className="btn btn-ghost btn-sm">
+                      Entrar
+                    </Link>
+                    <Link href="/auth/signup" className="btn btn-primary btn-sm gap-1.5 font-bold">
+                      Começar grátis
+                      <ChevronRight size={14} strokeWidth={2.5} />
+                    </Link>
+                  </>
+                )}
               </div>
 
             {/* Mobile Menu Toggle */}
@@ -111,13 +139,22 @@ export default function Navbar() {
                 </Link>
               ))}
               <div className="mt-3 pt-3 border-t border-neutral-100 flex flex-col gap-2">
-                <Link href="/auth/login" className="btn btn-ghost btn-md w-full">
-                  Entrar
-                </Link>
-                <Link href="/auth/signup" className="btn btn-primary btn-md w-full">
-                  <Zap size={16} />
-                  Começar grátis
-                </Link>
+                {user ? (
+                  <Link href="/dashboard" className="btn btn-primary btn-md w-full gap-2" onClick={() => setMobileOpen(false)}>
+                    <LayoutDashboard size={18} />
+                    Dashboard
+                  </Link>
+                ) : (
+                  <>
+                    <Link href="/auth/login" className="btn btn-ghost btn-md w-full" onClick={() => setMobileOpen(false)}>
+                      Entrar
+                    </Link>
+                    <Link href="/auth/signup" className="btn btn-primary btn-md w-full" onClick={() => setMobileOpen(false)}>
+                      <Zap size={16} />
+                      Começar grátis
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
           </motion.div>

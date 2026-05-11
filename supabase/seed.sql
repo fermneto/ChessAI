@@ -1,25 +1,4 @@
--- Create puzzles table for external tactical puzzles
-CREATE TABLE IF NOT EXISTS public.puzzles (
-    id TEXT PRIMARY KEY,
-    fen TEXT NOT NULL,
-    solution TEXT[] NOT NULL,
-    rating INTEGER,
-    themes TEXT[],
-    last_move TEXT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
-);
-
--- Index for random selection
-CREATE INDEX IF NOT EXISTS idx_puzzles_rating ON public.puzzles(rating);
-
--- Enable RLS
-ALTER TABLE public.puzzles ENABLE ROW LEVEL SECURITY;
-
--- Allow public read access
-CREATE POLICY "Allow public read access to puzzles" ON public.puzzles
-    FOR SELECT USING (true);
-
--- Insert initial high-quality puzzles (Sample of 100+ to start)
+-- Seed data for tactical puzzles
 INSERT INTO public.puzzles (id, fen, solution, rating, themes, last_move) VALUES
 ('00008', 'r6k/pp2r2p/4Rp1Q/3p4/8/1N1P2b1/PqP3PP/7K w - - 0 1', ARRAY['e6e7', 'b2b1', 'b3c1', 'b1c1', 'h6c1'], 1882, ARRAY['middlegame', 'crushing', 'long', 'hangingPiece'], 'f2g3'),
 ('00sHx', 'q5nr/1ppknQpp/3p4/1P2p3/4P3/B1PP1b2/B5PP/5K2 w - - 1 1', ARRAY['a2e6', 'd7d8', 'f7f8'], 1525, ARRAY['mateIn2', 'middlegame', 'short'], 'e8d7'),
@@ -33,4 +12,3 @@ INSERT INTO public.puzzles (id, fen, solution, rating, themes, last_move) VALUES
 ('00120', 'rn1qk2r/pb2bppp/1p1ppn2/2p5/2PP1P2/2N1PN2/PP2B1PP/R1BQ1RK1 w kq - 0 1', ARRAY['e4e5', 'd6e5', 'f4e5'], 1700, ARRAY['middlegame', 'advantage'], 'a7a6'),
 ('00250', 'rn1qk2r/pp2bppp/2p1pn2/5bB1/3P4/2N2N2/PPP1BPPP/R2QK2R w KQkq - 0 1', ARRAY['g5f6', 'e7f6', 'c3d5'], 2100, ARRAY['opening', 'advantage', 'positional'], 'f5b1')
 ON CONFLICT (id) DO NOTHING;
-

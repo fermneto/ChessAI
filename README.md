@@ -109,7 +109,9 @@ src/
 
 supabase/
   migrations/
-    20240510_create_puzzles_table.sql   Puzzles table with RLS policy
+    20240510000000_create_puzzles_table.sql   Puzzles table structure
+    20260510214000_create_core_schema.sql      Core tables and RLS policies
+  seed.sql                             Initial tactical puzzles data
 
 public/
   pieces/              12 PNG chess piece images (wK, wQ, wR, wB, wN, wP, bK...)
@@ -329,9 +331,17 @@ GROQ_API_KEY=your_groq_api_key
 
 ### Database setup
 
-Run the migrations in your Supabase project. From the Supabase dashboard, go to the SQL editor and run the contents of `supabase/migrations/20240510_create_puzzles_table.sql`.
+Run the migrations and seed data using the Supabase CLI:
 
-You will also need to create the `profiles`, `repertoires`, `training_sessions`, and `daily_tips` tables. Their schemas are defined in `src/types/database.ts`.
+```bash
+# Sincronizar o esquema do banco de dados
+npx supabase db push
+
+# (Opcional) Resetar banco local com os dados de seed
+npx supabase db reset
+```
+
+As tabelas `profiles`, `repertoires`, `training_sessions` e `daily_tips` agora são criadas automaticamente através das migrações em `supabase/migrations/`.
 
 ### Running locally
 

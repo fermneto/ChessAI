@@ -51,6 +51,12 @@ export async function updateSession(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = '/auth/login';
     url.searchParams.set('redirectTo', request.nextUrl.pathname);
+    
+    // Force HTTP on localhost
+    if (url.hostname === 'localhost') {
+      url.protocol = 'http:';
+    }
+    
     return NextResponse.redirect(url);
   }
 
@@ -63,6 +69,10 @@ export async function updateSession(request: NextRequest) {
   if (user && isAuthPage) {
     const url = request.nextUrl.clone();
     url.pathname = '/dashboard';
+    // Ensure protocol is preserved (especially for localhost)
+    if (url.hostname === 'localhost') {
+      url.protocol = 'http:';
+    }
     return NextResponse.redirect(url);
   }
 
