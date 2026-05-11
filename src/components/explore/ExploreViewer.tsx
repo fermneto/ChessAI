@@ -3,7 +3,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Chess } from 'chess.js';
 import CustomChessBoard from '@/components/chess/CustomChessBoard';
-import { ChevronLeft, ChevronRight, RotateCcw, RefreshCw } from 'lucide-react';
+import { ChevronLeft, ChevronRight, RotateCcw, RefreshCw, Zap } from 'lucide-react';
+import { useStockfish } from '@/hooks/useStockfish';
 import { lookupOpening } from '@/lib/chess/openingDatabase';
 import {
   type ChessTree,
@@ -18,6 +19,9 @@ export interface ExploreStudyState {
   history: string[];
   opening: string | null;
   turn: 'w' | 'b';
+  evaluation: string;
+  bestLine: string[];
+  engineEnabled: boolean;
 }
 
 interface Props {
@@ -40,6 +44,9 @@ export default function ExploreViewer({ repertoire, onStateChange }: Props) {
   const [selectedSquare, setSelectedSquare] = useState<string | null>(null);
   const [legalMoves, setLegalMoves] = useState<string[]>([]);
   const [manualArrows, setManualArrows] = useState<any[]>([]);
+  const [engineEnabled, setEngineEnabled] = useState(false);
+
+  const { evaluation, bestMove, bestLine, isAnalyzing, analyzePosition } = useStockfish();
 
   // Tree state
   const [tree] = useState<ChessTree>(() => {
@@ -69,17 +76,31 @@ export default function ExploreViewer({ repertoire, onStateChange }: Props) {
       const openingStr = info ? `${info.eco}: ${info.name}` : null;
       if (info) setCurrentOpening(openingStr);
       
-      if (onStateChange) {
-        const path = getPathToNode(tree, currentNodeId);
-        onStateChange({
-          fen: gameRef.current.fen(),
-          history: path,
-          opening: openingStr || currentOpening,
-          turn: gameRef.current.turn() as 'w' | 'b',
-        });
-      }
+      if (info) setCurrentOpening(openingStr);
     });
   }, [fen, isMounted, currentNodeId]);
+
+  // Stockfish analysis
+  useEffect(() => {
+    if (engineEnabled && isMounted) {
+      analyzePosition(gameRef.current.fen());
+    }
+  }, [engineEnabled, fen, isMounted, analyzePosition]);
+
+  // Notify parent of state changes
+  useEffect(() => {
+    if (!isMounted || !onStateChange) return;
+
+    onStateChange({
+      fen: gameRef.current.fen(),
+      history: getPathToNode(tree, currentNodeId),
+      opening: currentOpening,
+      turn: gameRef.current.turn() as 'w' | 'b',
+      evaluation,
+      bestLine,
+      engineEnabled,
+    });
+  }, [fen, currentNodeId, evaluation, bestLine, engineEnabled, isMounted]);
 
   // Navigate to a node (read-only navigation)
   const navigateTo = useCallback((nodeId: string) => {
@@ -171,6 +192,7 @@ export default function ExploreViewer({ repertoire, onStateChange }: Props) {
 
   // Square click for read-only navigation (allow clicking moves in tree)
   const onSquareClick = (square: string) => {
+    setManualArrows([]);
     if (selectedSquare) {
       // Try to navigate to a child that results from this move
       const node = tree.nodes[currentNodeId];
@@ -234,60 +256,113 @@ export default function ExploreViewer({ repertoire, onStateChange }: Props) {
 
   return (
     <div className="space-y-4 min-w-0 max-w-full overflow-hidden grid grid-cols-1">
-      {/* Opening label area - fixed height to prevent layout shift */}
-      <div className="min-h-[34px]">
-        {currentOpening && (
-          <div className="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-100 inline-block animate-in fade-in slide-in-from-top-1">
+      {/* Opening label area */}
+      {currentOpening && (
+        <div className="animate-in fade-in slide-in-from-top-1">
+          <div className="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-100 inline-block">
             {currentOpening}
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
-      {/* Board */}
-      <CustomChessBoard
-        position={fen}
-        onSquareClick={onSquareClick}
-        boardOrientation={orientation}
-        selectedSquare={selectedSquare}
-        lastMove={lastMove}
-        legalMoves={legalMoves}
-        manualArrows={manualArrows}
-        onManualArrowsChange={setManualArrows}
-      />
+      {/* Board Area Container - Centered and structured */}
+      <div className="flex flex-col items-center w-full max-w-[600px] mx-auto space-y-4">
+        {/* Engine Toolbar - Structured & Integrated */}
+        <div className="w-full bg-neutral-50/50 rounded-2xl border border-neutral-100 p-2.5 flex items-center justify-between gap-4 animate-in fade-in slide-in-from-top-2">
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <button
+              onClick={() => setEngineEnabled(!engineEnabled)}
+              className={`flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all shadow-sm shrink-0 ${engineEnabled
+                  ? 'bg-blue-600 text-white shadow-blue-500/20'
+                  : 'bg-white text-neutral-500 border border-neutral-200 hover:bg-neutral-50'
+                }`}
+            >
+              <Zap size={12} className={engineEnabled ? 'fill-white' : ''} />
+              {engineEnabled ? 'Motor ON' : 'Analisar'}
+            </button>
 
-      {/* Controls */}
-      <div className="flex items-center gap-2">
-        <button
-          onClick={goToRoot}
-          disabled={!hasParent}
-          className="p-2 rounded-lg border border-neutral-200 hover:bg-neutral-50 disabled:opacity-30 transition-colors"
-          title="Início"
-        >
-          <RefreshCw size={15} className="text-neutral-500" />
-        </button>
-        <button
-          onClick={goBack}
-          disabled={!hasParent}
-          className="p-2 rounded-lg border border-neutral-200 hover:bg-neutral-50 disabled:opacity-30 transition-colors"
-          title="Voltar"
-        >
-          <ChevronLeft size={15} className="text-neutral-500" />
-        </button>
-        <button
-          onClick={goForward}
-          disabled={!hasChildren}
-          className="p-2 rounded-lg border border-neutral-200 hover:bg-neutral-50 disabled:opacity-30 transition-colors"
-          title="Avançar"
-        >
-          <ChevronRight size={15} className="text-neutral-500" />
-        </button>
-        <button
-          onClick={() => setOrientation(o => o === 'white' ? 'black' : 'white')}
-          className="p-2 rounded-lg border border-neutral-200 hover:bg-neutral-50 transition-colors ml-auto"
-          title="Inverter tabuleiro"
-        >
-          <RotateCcw size={15} className="text-neutral-500" />
-        </button>
+            <div className="flex items-center gap-3 min-w-0 overflow-hidden">
+              {engineEnabled ? (
+                <div className="flex items-center gap-3 animate-in fade-in slide-in-from-left-2 overflow-hidden">
+                  <div className={`px-2 py-1 rounded-lg font-mono font-bold text-xs shadow-inner shrink-0 ${evaluation.startsWith('+') ? 'bg-green-50 text-green-700' :
+                      evaluation.startsWith('-') ? 'bg-red-50 text-red-700' : 'bg-neutral-50 text-neutral-600'
+                    }`}>
+                    {evaluation}
+                  </div>
+                  {bestMove && !isAnalyzing && (
+                    <div className="hidden xs:block text-[10px] font-medium text-neutral-500 bg-white/80 px-2.5 py-1 rounded-lg border border-neutral-100 truncate">
+                      Melhor: <span className="text-blue-600 font-bold uppercase">{bestMove}</span>
+                    </div>
+                  )}
+                  {isAnalyzing && (
+                    <div className="flex items-center gap-2 text-[10px] text-neutral-400 font-medium shrink-0">
+                      <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse" />
+                      <span className="hidden sm:inline">Analisando...</span>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="text-[10px] font-medium text-neutral-400 italic animate-in fade-in truncate opacity-60">
+                  Stockfish 16.1.0 pronto para análise
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Board */}
+        <div className="w-full relative z-0">
+          <CustomChessBoard
+            position={fen}
+            onSquareClick={onSquareClick}
+            boardOrientation={orientation}
+            selectedSquare={selectedSquare}
+            lastMove={lastMove}
+            legalMoves={legalMoves}
+            arrows={engineEnabled && bestMove ? [{
+              from: bestMove.slice(0, 2),
+              to: bestMove.slice(2, 4),
+              color: "rgba(34, 197, 94, 0.6)"
+            }] : []}
+            manualArrows={manualArrows}
+            onManualArrowsChange={setManualArrows}
+          />
+        </div>
+
+        {/* Controls */}
+        <div className="flex items-center gap-2 py-2">
+          <button
+            onClick={goToRoot}
+            disabled={!hasParent}
+            className="p-2 rounded-lg border border-neutral-200 hover:bg-neutral-50 disabled:opacity-30 transition-colors"
+            title="Início"
+          >
+            <RefreshCw size={15} className="text-neutral-500" />
+          </button>
+          <button
+            onClick={goBack}
+            disabled={!hasParent}
+            className="p-2 rounded-lg border border-neutral-200 hover:bg-neutral-50 disabled:opacity-30 transition-colors"
+            title="Voltar"
+          >
+            <ChevronLeft size={15} className="text-neutral-500" />
+          </button>
+          <button
+            onClick={goForward}
+            disabled={!hasChildren}
+            className="p-2 rounded-lg border border-neutral-200 hover:bg-neutral-50 disabled:opacity-30 transition-colors"
+            title="Avançar"
+          >
+            <ChevronRight size={15} className="text-neutral-500" />
+          </button>
+          <button
+            onClick={() => setOrientation(o => o === 'white' ? 'black' : 'white')}
+            className="p-2 rounded-lg border border-neutral-200 hover:bg-neutral-50 transition-colors ml-auto"
+            title="Inverter tabuleiro"
+          >
+            <RotateCcw size={15} className="text-neutral-500" />
+          </button>
+        </div>
       </div>
 
       {/* Move notation (Breadcrumbs style) */}
@@ -347,29 +422,66 @@ export default function ExploreViewer({ repertoire, onStateChange }: Props) {
         <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 mb-2">Continuações</p>
         <div className="w-0 min-w-full overflow-x-auto overflow-y-hidden no-scrollbar">
           <div className="block whitespace-nowrap w-max min-w-full">
-          {hasChildren ? (
-            currentNode!.children!.map((childId, i) => {
-              const child = tree.nodes[childId];
-              return (
-                <button
-                  key={childId}
-                  onClick={() => navigateTo(childId)}
-                  className={`text-xs font-bold px-2.5 py-1 rounded-lg border transition-colors
+            {hasChildren ? (
+              currentNode!.children!.map((childId, i) => {
+                const child = tree.nodes[childId];
+                return (
+                  <button
+                    key={childId}
+                    onClick={() => navigateTo(childId)}
+                    className={`text-xs font-bold px-2.5 py-1 rounded-lg border transition-colors
                     ${i === 0
-                      ? 'bg-blue-500 text-white border-blue-500 hover:bg-blue-600'
-                      : 'bg-white text-neutral-700 border-neutral-200 hover:border-blue-300 hover:text-blue-600'
-                    }`}
-                >
-                  {child.san}
-                </button>
-              );
-            })
-          ) : (
-            <span className="text-xs text-neutral-400 italic">Fim da linha explorada</span>
-          )}
+                        ? 'bg-blue-500 text-white border-blue-500 hover:bg-blue-600'
+                        : 'bg-white text-neutral-700 border-neutral-200 hover:border-blue-300 hover:text-blue-600'
+                      }`}
+                  >
+                    {child.san}
+                  </button>
+                );
+              })
+            ) : (
+              <span className="text-xs text-neutral-400 italic">Fim da linha explorada</span>
+            )}
           </div>
         </div>
       </div>
+
+      {/* Best Line Display */}
+      {engineEnabled && (
+        <div className="card-surface p-4 bg-neutral-900 border border-neutral-800 shadow-xl w-full max-w-[600px] mx-auto">
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+                <span className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Linha Recomendada</span>
+              </div>
+              <div className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold ${evaluation.startsWith('+') ? 'bg-green-500/10 text-green-400' :
+                  evaluation.startsWith('-') ? 'bg-red-500/10 text-red-400' : 'bg-blue-500/10 text-blue-400'
+                }`}>
+                {evaluation}
+              </div>
+            </div>
+
+            <div className="p-3 rounded-lg bg-white/5 border border-white/5">
+              <div className="text-[10px] text-neutral-500 font-bold uppercase mb-1">Melhor linha</div>
+              <div className="flex flex-wrap gap-x-2 gap-y-1 text-xs text-neutral-300 font-mono">
+                {bestLine.length > 0 ? (
+                  bestLine.map((mv, idx) => (
+                    <span key={idx} className={idx === 0 ? 'text-blue-400 font-bold' : ''}>
+                      {idx % 2 === 0 && gameRef.current.turn() === 'b' && idx === 0 ? '... ' : ''}
+                      {mv}
+                    </span>
+                  ))
+                ) : (
+                  <span className="text-neutral-500 italic text-[10px]">
+                    {isAnalyzing ? 'Calculando...' : 'Aguardando posição'}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
