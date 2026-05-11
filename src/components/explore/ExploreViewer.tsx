@@ -286,7 +286,7 @@ export default function ExploreViewer({ repertoire, onStateChange }: Props) {
       </div>
 
       {/* Move notation */}
-      <div className="bg-neutral-50 border border-neutral-200 rounded-xl p-3 min-h-[70px] flex flex-col justify-center overflow-hidden">
+      <div className="bg-neutral-50 border border-neutral-200 rounded-xl p-3 min-h-[70px] flex flex-col justify-center overflow-hidden w-full max-w-[600px] mx-auto">
         <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 mb-1">Caminho atual</p>
         <div className="flex flex-nowrap gap-1 overflow-x-auto no-scrollbar w-full max-w-full">
           {pathNodes.length > 0 ? (
@@ -310,7 +310,7 @@ export default function ExploreViewer({ repertoire, onStateChange }: Props) {
       </div>
 
       {/* Variations (children at current node) */}
-      <div className="bg-neutral-50 border border-neutral-200 rounded-xl p-3 min-h-[85px] flex flex-col justify-center overflow-hidden">
+      <div className="bg-neutral-50 border border-neutral-200 rounded-xl p-3 min-h-[85px] flex flex-col justify-center overflow-hidden w-full max-w-[600px] mx-auto">
         <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 mb-2">Continuações</p>
         <div className="flex flex-nowrap gap-1.5 overflow-x-auto no-scrollbar w-full max-w-full">
           {hasChildren ? (

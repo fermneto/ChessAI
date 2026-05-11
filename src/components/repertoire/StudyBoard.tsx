@@ -362,7 +362,7 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
     <div className="flex flex-col gap-6 max-w-full overflow-hidden">
       <div className="grid lg:grid-cols-12 gap-6 min-w-0">
         <div className="lg:col-span-7 flex flex-col gap-2 min-w-0">
-          <div className="bg-white p-3 rounded-2xl shadow-sm border border-neutral-100 flex items-center justify-between gap-4 min-h-[58px]">
+          <div className="bg-white p-3 rounded-2xl shadow-sm border border-neutral-100 flex items-center justify-between gap-4 min-h-[58px] w-full max-w-[600px] mx-auto">
             <div className="flex items-center gap-3 flex-1 min-w-0">
               <button
                 onClick={() => setEngineEnabled(!engineEnabled)}
