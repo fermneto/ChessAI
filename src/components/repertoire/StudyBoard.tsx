@@ -359,7 +359,7 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
   };
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 max-w-full overflow-hidden">
       <div className="grid lg:grid-cols-12 gap-6 min-w-0">
         <div className="lg:col-span-7 flex flex-col gap-2 min-w-0">
           <div className="bg-white p-3 rounded-2xl shadow-sm border border-neutral-100 flex items-center justify-between gap-4 min-h-[58px]">
@@ -613,11 +613,11 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
       </div>
 
       {/* Branch & Variation Navigator - Refactored */}
-      <div className="mt-4 flex flex-col gap-4 min-w-0">
+      <div className="mt-4 flex flex-col gap-4 min-w-0 overflow-hidden">
         {/* 1. Breadcrumbs (Current Path) */}
         <div 
           ref={breadcrumbsRef}
-          className="flex items-center gap-2 overflow-x-auto py-2 no-scrollbar min-h-[44px] bg-neutral-50/50 rounded-lg px-2 border border-transparent w-full flex-nowrap"
+          className="flex items-center gap-2 overflow-x-auto py-2 no-scrollbar min-h-[44px] bg-neutral-50/50 rounded-lg px-2 border border-transparent w-full max-w-full flex-nowrap shrink"
         >
           {getFullLineInfo(tree, currentNodeId).length > 0 ? (
             <>
@@ -629,7 +629,7 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
                 <RotateCcw size={14} />
               </button>
               <ChevronRight size={12} className="text-neutral-300 shrink-0" />
-              <div className="flex items-center gap-1 flex-nowrap shrink-0">
+              <div className="flex items-center gap-1 flex-nowrap">
                 {getFullLineInfo(tree, currentNodeId).map((step, idx) => (
                   <div key={step.nodeId} className="flex items-center">
                     <button

@@ -228,7 +228,7 @@ export default function ExploreViewer({ repertoire, onStateChange }: Props) {
   );
 
   return (
-    <div className="space-y-4 min-w-0">
+    <div className="space-y-4 min-w-0 max-w-full overflow-hidden">
       {/* Opening label area - fixed height to prevent layout shift */}
       <div className="min-h-[34px]">
         {currentOpening && (
@@ -288,7 +288,7 @@ export default function ExploreViewer({ repertoire, onStateChange }: Props) {
       {/* Move notation */}
       <div className="bg-neutral-50 border border-neutral-200 rounded-xl p-3 min-h-[70px] flex flex-col justify-center overflow-hidden">
         <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 mb-1">Caminho atual</p>
-        <div className="flex flex-wrap gap-1 overflow-x-auto no-scrollbar">
+        <div className="flex flex-nowrap gap-1 overflow-x-auto no-scrollbar w-full max-w-full">
           {pathNodes.length > 0 ? (
             pathNodes.map((san, i) => {
               const isEven = i % 2 === 0;
@@ -312,7 +312,7 @@ export default function ExploreViewer({ repertoire, onStateChange }: Props) {
       {/* Variations (children at current node) */}
       <div className="bg-neutral-50 border border-neutral-200 rounded-xl p-3 min-h-[85px] flex flex-col justify-center overflow-hidden">
         <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 mb-2">Continuações</p>
-        <div className="flex flex-wrap gap-1.5 overflow-x-auto no-scrollbar">
+        <div className="flex flex-nowrap gap-1.5 overflow-x-auto no-scrollbar w-full max-w-full">
           {hasChildren ? (
             currentNode!.children!.map((childId, i) => {
               const child = tree.nodes[childId];
