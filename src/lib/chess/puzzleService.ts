@@ -18,8 +18,8 @@ export const puzzleService = {
   async getPuzzle(excludeIds: Set<string> = new Set(), openingTheme?: string): Promise<Puzzle | null> {
     try {
       const url = openingTheme
-        ? `https://lichess.org/api/puzzle/next?angle=${encodeURIComponent(openingTheme)}`
-        : 'https://lichess.org/api/puzzle/next';
+        ? `/api/v1/puzzles/next?angle=${encodeURIComponent(openingTheme)}`
+        : '/api/v1/puzzles/next';
 
       const response = await fetch(url, {
         headers: {
@@ -50,7 +50,7 @@ export const puzzleService = {
 
   async getDailyPuzzle(): Promise<Puzzle | null> {
     try {
-      const response = await fetch('https://lichess.org/api/puzzle/daily', { cache: 'no-store' });
+      const response = await fetch('/api/v1/puzzles/daily', { cache: 'no-store' });
       const data = await response.json();
       return this.mapLichessDataToPuzzle(data);
     } catch (e) {

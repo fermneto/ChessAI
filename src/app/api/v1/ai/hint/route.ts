@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 
 /**
- * @api {post} /api/v1/ai/hint Pedir dica de lance
+ * @api {post} /api/v1/ai/hint Hint
  * @apiVersion 1.0.0
  * @apiGroup AI
  * @apiPermission Authenticated
@@ -31,7 +31,7 @@ export async function POST(req: Request) {
       turn
     } = body;
 
-    // Validação
+    // Context
     if (!fen || !expectedMove) {
       return NextResponse.json(
         { status: 'error', message: 'FEN e lance esperado são obrigatórios', code: 'INVALID_INPUT' },
@@ -41,9 +41,9 @@ export async function POST(req: Request) {
 
     const apiKey = process.env.GROQ_API_KEY;
     if (!apiKey) {
-      return NextResponse.json({ 
-        status: 'success', 
-        data: { hint: "Dica: Tente focar no controle do centro e desenvolvimento das peças." } 
+      return NextResponse.json({
+        status: 'success',
+        data: { hint: "Dica: Tente focar no controle do centro e desenvolvimento das peças." }
       });
     }
 
@@ -73,9 +73,9 @@ export async function POST(req: Request) {
 
     const text = await aiService.generateText(prompt);
 
-    return NextResponse.json({ 
-      status: 'success', 
-      data: { hint: text || "Foque nos princípios da abertura!" } 
+    return NextResponse.json({
+      status: 'success',
+      data: { hint: text || "Foque nos princípios da abertura!" }
     });
 
   } catch (error: any) {
