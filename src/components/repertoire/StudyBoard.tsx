@@ -71,6 +71,7 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
   const [tree, setTree] = useState<ChessTree>(createEmptyTree(fen));
   const [currentNodeId, setCurrentNodeId] = useState<string>('root');
   const [renderTick, setRenderTick] = useState(0);
+  const breadcrumbsRef = useRef<HTMLDivElement>(null);
 
   const { evaluation, bestMove, bestLine, isAnalyzing, analyzePosition } = useStockfish();
 
@@ -317,6 +318,16 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [undoMove, goForward, resetBoard, goToEnd]);
+
+  // Auto-scroll breadcrumbs
+  useEffect(() => {
+    if (breadcrumbsRef.current) {
+      breadcrumbsRef.current.scrollTo({
+        left: breadcrumbsRef.current.scrollWidth,
+        behavior: 'smooth'
+      });
+    }
+  }, [currentNodeId]);
 
   const saveRepertoire = async () => {
     setLoading(true);
@@ -602,9 +613,12 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
       </div>
 
       {/* Branch & Variation Navigator - Refactored */}
-      <div className="mt-4 flex flex-col gap-4">
+      <div className="mt-4 flex flex-col gap-4 min-w-0">
         {/* 1. Breadcrumbs (Current Path) */}
-        <div className="flex items-center gap-2 overflow-x-auto py-2 no-scrollbar min-h-[44px] bg-neutral-50/50 rounded-lg px-2 border border-transparent w-full max-w-full">
+        <div 
+          ref={breadcrumbsRef}
+          className="flex items-center gap-2 overflow-x-auto py-2 no-scrollbar min-h-[44px] bg-neutral-50/50 rounded-lg px-2 border border-transparent w-full flex-nowrap"
+        >
           {getFullLineInfo(tree, currentNodeId).length > 0 ? (
             <>
               <button
@@ -615,7 +629,7 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
                 <RotateCcw size={14} />
               </button>
               <ChevronRight size={12} className="text-neutral-300 shrink-0" />
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1 flex-nowrap shrink-0">
                 {getFullLineInfo(tree, currentNodeId).map((step, idx) => (
                   <div key={step.nodeId} className="flex items-center">
                     <button
