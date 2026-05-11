@@ -34,13 +34,9 @@ export default async function ExplorePage({
     query = query.eq('color', color);
   }
 
-  const { data: repertoires, error: fetchError } = await query
+  const { data: repertoires } = await query
     .order('created_at', { ascending: false })
     .limit(60);
-
-  if (fetchError) {
-    console.error('[ExplorePage Fetch Error]:', JSON.stringify(fetchError, null, 2));
-  }
 
 
   const items = (repertoires || []) as any[];

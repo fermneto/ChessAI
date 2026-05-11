@@ -1,6 +1,6 @@
 # ChessAI
 
-A chess opening repertoire study platform built with Next.js 15. Create and organize opening lines, study them with a visual board, train through repetition drills, and receive strategic commentary from an AI coach powered by Groq (Llama 3). Local position analysis is handled by Stockfish 16 NNUE running entirely in the browser.
+A chess opening repertoire study platform built with Next.js 15. Create and organize opening lines, study them with a visual board, train through repetition drills, and receive strategic commentary from an AI coach powered by Groq (Llama 3). Local position analysis is handled by Stockfish 16 NNUE running entirely in the browser. The web design and AI prompts are all in brazilian portuguese.
 
 Live at: [chess-ai-zeta.vercel.app](https://chess-ai-zeta.vercel.app)
 
