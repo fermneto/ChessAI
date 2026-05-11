@@ -617,7 +617,7 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
         {/* 1. Breadcrumbs (Current Path) */}
         <div 
           ref={breadcrumbsRef}
-          className="flex items-center gap-2 overflow-x-auto py-2 no-scrollbar min-h-[44px] bg-neutral-50/50 rounded-lg px-2 border border-transparent w-full max-w-full flex-nowrap shrink"
+          className="flex items-center gap-2 overflow-x-auto py-2 no-scrollbar min-h-[44px] bg-neutral-50/50 rounded-lg px-2 border border-transparent w-full max-w-[600px] mx-auto flex-nowrap shrink"
         >
           {getFullLineInfo(tree, currentNodeId).length > 0 ? (
             <>
@@ -661,7 +661,7 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
         </div>
 
         {/* 2. Variation Explorer (Continuations) */}
-        <div className="card-surface p-5 bg-white border border-neutral-100 shadow-sm min-h-[160px]">
+        <div className="card-surface p-5 bg-white border border-neutral-100 shadow-sm min-h-[160px] w-full max-w-[600px] mx-auto">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <RefreshCw size={16} className="text-blue-500" />
