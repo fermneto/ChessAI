@@ -1,5 +1,6 @@
 import { aiService } from './service';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 export interface DailyTip {
   title: string;
@@ -8,22 +9,18 @@ export interface DailyTip {
 
 export async function getDailyTip(): Promise<DailyTip> {
   const today = new Date().toISOString().split('T')[0];
-
+  
   try {
     const supabase = await createClient();
 
     // 1. Try to get from database first
-    const { data: existingTip, error: fetchError } = await (supabase.from('daily_tips') as any)
+    const { data: existingTip } = await (supabase.from('daily_tips') as any)
       .select('title, content')
       .eq('date', today)
       .maybeSingle();
 
     if (existingTip) {
       return existingTip as DailyTip;
-    }
-
-    if (fetchError) {
-      console.error('[DailyTip] Erro ao buscar dica do dia:', fetchError);
     }
 
     // 2. Fetch recent tips for variety context
@@ -50,29 +47,25 @@ export async function getDailyTip(): Promise<DailyTip> {
     `;
 
     // 3. Generate with AI
-    console.log('[DailyTip] Gerando nova dica com Groq IA...');
     const aiTip = await aiService.generateJSON<DailyTip>(prompt);
 
-    // 4. Try to persist in background (don't block if DB fails)
+    // 4. Persist in background via Admin (don't block if DB fails)
     try {
-      const { error: upsertError } = await (supabase.from('daily_tips') as any)
+      const supabaseAdmin = createAdminClient();
+      await (supabaseAdmin.from('daily_tips') as any)
         .upsert({
           date: today,
           title: aiTip.title,
           content: aiTip.content
         }, { onConflict: 'date' });
-
-      if (upsertError) throw upsertError;
-      //after console.log('[DailyTip] Dica salva com sucesso no banco.');
     } catch (dbError) {
-      //log but don't fail, because we have the AI tip ready to show
-      //after console.error('[DailyTip] Erro ao salvar dica no banco (IA OK):', dbError);
+      console.error('[DailyTip] Erro ao persistir no banco:', dbError);
     }
 
     return aiTip;
 
   } catch (error) {
-    console.error('[DailyTip Critical Fallback]:', error);
+    console.error('[DailyTip Fallback]:', error);
     return {
       title: "Exploração de Casas Fracas",
       content: "Identifique casas que não podem mais ser defendidas por peões e tente posicionar suas peças nelas, especialmente cavalos."
