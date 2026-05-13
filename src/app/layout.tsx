@@ -9,7 +9,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://chessai.app'),
+  metadataBase: new URL('https://aichess.com.br'),
   title: {
     default: 'ChessAI — Plataforma Inteligente de Repertórios de Abertura',
     template: '%s | ChessAI',
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'pt_BR',
-    url: 'https://chessai.app',
+    url: 'https://aichess.com.br',
     siteName: 'ChessAI',
     title: 'ChessAI — Plataforma Inteligente de Repertórios de Abertura',
     description:
