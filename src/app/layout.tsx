@@ -46,6 +46,7 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
+  manifest: '/site.webmanifest',
 };
 
 export const viewport: Viewport = {
