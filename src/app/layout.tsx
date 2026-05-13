@@ -9,12 +9,13 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://chessai.app'),
   title: {
     default: 'ChessAI — Plataforma Inteligente de Repertórios de Abertura',
     template: '%s | ChessAI',
   },
   description:
-    'Construa repertórios de abertura personalizados com análise de engine e IA pedagógica. Aprenda xadrez de forma intuitiva, eficiente e alinhada ao seu estilo de jogo.',
+    'Construa repertórios de abertura personalizados com análise de engine e IA pedagógica. Aprenda xadrez de forma intuitiva, eficiente e alinhada ao seu estilo de jogo, com o auxílio de desafios e pedagogia personalizada.',
   keywords: [
     'xadrez', 'abertura xadrez', 'repertório xadrez', 'análise xadrez',
     'stockfish', 'chess ai', 'aprender xadrez', 'treino xadrez',
@@ -29,11 +30,20 @@ export const metadata: Metadata = {
     title: 'ChessAI — Plataforma Inteligente de Repertórios de Abertura',
     description:
       'Construa repertórios de abertura personalizados com análise de engine e IA pedagógica.',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'ChessAI — Plataforma Inteligente de Repertórios de Abertura',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'ChessAI — Plataforma Inteligente de Repertórios de Abertura',
     description: 'Construa repertórios de abertura personalizados com análise de engine e IA pedagógica.',
+    images: ['/og-image.png'],
   },
   robots: {
     index: true,
