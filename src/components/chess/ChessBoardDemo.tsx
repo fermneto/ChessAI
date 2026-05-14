@@ -51,7 +51,6 @@ export default function ChessBoardDemo() {
           setTick(t => t + 1);
         }
       } catch (e) {
-        console.error("Erro ao mover:", e);
         resetDemo();
       }
     }, 1800);

@@ -72,9 +72,13 @@ export default function ExploreDetailClient({ repertoire, authorName }: Props) {
                   {repertoire.opening_name && (
                     <p className="text-sm text-neutral-500 font-medium">{repertoire.opening_name}</p>
                   )}
+
+                  {/* Author yet anonimous
                   <p className="text-xs text-neutral-400 mt-1">
                     por <span className="font-semibold text-neutral-600">{authorName}</span>
                   </p>
+                  */}
+
                   {repertoire.description && (
                     <p className="text-sm text-neutral-600 mt-3 pt-3 border-t border-neutral-100 leading-relaxed">
                       {repertoire.description}
@@ -121,11 +125,13 @@ export default function ExploreDetailClient({ repertoire, authorName }: Props) {
                   </div>
                 )}
 
+                {/* Username explorer exibit
                 <div className="flex items-center gap-3 text-sm">
                   <BookOpen size={15} className="text-neutral-400 flex-shrink-0" />
                   <span className="text-neutral-500">Autor:</span>
                   <span className="text-neutral-800 font-medium ml-auto">{authorName}</span>
                 </div>
+                */}
 
                 <div className="flex items-center gap-3 text-sm">
                   <Calendar size={15} className="text-neutral-400 flex-shrink-0" />

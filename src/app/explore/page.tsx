@@ -149,13 +149,14 @@ export default async function ExplorePage({
                       {rep.opening_name || 'Abertura personalizada'}
                     </p>
                     <div className="flex items-center gap-3 mt-3">
+                      {/* Author name, anonimous yet
                       <span className="flex items-center gap-1 text-[10px] text-neutral-400 font-bold uppercase tracking-wider">
                         <BookOpen size={11} />
                         por {(() => {
                           const p = profileMap[rep.user_id];
                           return p?.full_name || p?.username || 'Anônimo';
                         })()}
-                      </span>
+                      </span>*/}
                       <span className="flex items-center gap-1 text-[10px] text-neutral-400 font-bold uppercase tracking-wider">
                         <BarChart3 size={11} />
                         {rep.total_moves_studied || 0} lances
