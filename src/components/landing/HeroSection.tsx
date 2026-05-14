@@ -37,8 +37,8 @@ export default function HeroSection() {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="text-body-lg mb-8 max-w-lg"
             >
-              Construa repertórios personalizados com análise precisa de engine
-              e explicações claras sobre estratégia, planos típicos e conceitos
+              Construa repertórios com análise precisa de engine
+              e explicações claras de IA sobre estratégia, planos típicos e conceitos
               posicionais. Aprenda xadrez do jeito certo.
             </motion.p>
 

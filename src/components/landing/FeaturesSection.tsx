@@ -17,7 +17,7 @@ const features = [
     icon: Brain,
     title: 'IA Pedagógica',
     description:
-      'Não apenas números — a IA explica o propósito de cada lance, planos futuros e conceitos estratégicos em linguagem clara.',
+      'Muito mais do de números, a IA explica o propósito de cada lance, planos futuros e conceitos estratégicos em linguagem clara.',
     accent: '#3b82f6',
   },
   {
@@ -31,7 +31,7 @@ const features = [
     icon: Target,
     title: 'Treino Adaptativo',
     description:
-      'Drill inteligente que identifica seus pontos fracos e reforça as linhas que você mais precisa praticar.',
+      'Puzzles inteligentes que identificam seus pontos fracos e reforçam as linhas que você mais precisa praticar.',
     accent: '#8b5cf6',
   },
   {

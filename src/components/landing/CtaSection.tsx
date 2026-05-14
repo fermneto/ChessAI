@@ -35,7 +35,7 @@ export default function CtaSection() {
             </h2>
             <p className="text-body-lg text-neutral-400 mb-8">
               Junte-se à comunidade que já está construindo
-              repertórios mais sólidos com IA. Grátis para começar.
+              repertórios mais sólidos com IA. Totalmente gratuito.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Link

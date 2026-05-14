@@ -9,7 +9,7 @@ const steps = [
     icon: Search,
     title: 'Escolha sua abertura',
     description:
-      'Selecione de nossa biblioteca de aberturas classificadas por ECO, estilo e nível de complexidade. Ou importe uma posição via FEN ou PGN.',
+      'Selecione aberturas públicas de nossa biblioteca ou desenvolva seu próprio repertório personalizado. No ChessAI, o limite é sua criatividade.',
   },
   {
     number: '02',
