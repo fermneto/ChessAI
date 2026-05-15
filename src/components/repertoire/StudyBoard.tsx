@@ -372,7 +372,7 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
                   }`}
               >
                 <Zap size={14} className={engineEnabled ? 'fill-white' : ''} />
-                {engineEnabled ? 'Motor ON' : 'Ligar Motor'}
+                {engineEnabled ? 'Engine ON' : 'Ligar Engine'}
               </button>
 
               <div className="flex items-center gap-3 min-w-0 overflow-hidden">
@@ -602,7 +602,7 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
                     ))
                   ) : (
                     <span className="text-neutral-500 italic">
-                      {engineEnabled ? 'Calculando...' : 'Ligue o motor para analisar'}
+                      {engineEnabled ? 'Calculando...' : 'Ligue a engine para analisar'}
                     </span>
                   )}
                 </div>
@@ -620,47 +620,47 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
             ref={breadcrumbsRef}
             className="block whitespace-nowrap py-2 min-h-[44px] bg-neutral-50/50 px-2 border border-transparent w-max min-w-full"
           >
-          {getFullLineInfo(tree, currentNodeId).length > 0 ? (
-            <>
-              <button
-                onClick={() => resetBoard()}
-                className="p-2 rounded-lg hover:bg-neutral-100 text-neutral-400 transition-colors shrink-0"
-                title="Início"
-              >
-                <RotateCcw size={14} />
-              </button>
-              <ChevronRight size={12} className="text-neutral-300 shrink-0" />
-              <div className="inline-flex items-center gap-1">
-                {getFullLineInfo(tree, currentNodeId).map((step, idx) => (
-                  <div key={step.nodeId} className="inline-flex items-center">
-                    <button
-                      onClick={() => {
-                        setCurrentNodeId(step.nodeId);
-                        gameRef.current = new Chess(tree.nodes[step.nodeId].fen);
-                        setFen(tree.nodes[step.nodeId].fen);
-                      }}
-                      className={`text-[0.8125rem] font-medium px-2 py-1 rounded-md transition-all whitespace-nowrap ${idx === getFullLineInfo(tree, currentNodeId).length - 1
-                        ? 'text-blue-600 font-bold bg-blue-50'
-                        : 'text-neutral-500 hover:text-neutral-900 hover:bg-neutral-50'
-                        }`}
-                    >
-                      {idx % 2 === 0 ? `${Math.floor(idx / 2) + 1}. ` : ''}{step.san}
-                    </button>
-                    {idx < getFullLineInfo(tree, currentNodeId).length - 1 && (
-                      <ChevronRight size={10} className="text-neutral-300 mx-1 shrink-0" />
-                    )}
-                  </div>
-                ))}
+            {getFullLineInfo(tree, currentNodeId).length > 0 ? (
+              <>
+                <button
+                  onClick={() => resetBoard()}
+                  className="p-2 rounded-lg hover:bg-neutral-100 text-neutral-400 transition-colors shrink-0"
+                  title="Início"
+                >
+                  <RotateCcw size={14} />
+                </button>
+                <ChevronRight size={12} className="text-neutral-300 shrink-0" />
+                <div className="inline-flex items-center gap-1">
+                  {getFullLineInfo(tree, currentNodeId).map((step, idx) => (
+                    <div key={step.nodeId} className="inline-flex items-center">
+                      <button
+                        onClick={() => {
+                          setCurrentNodeId(step.nodeId);
+                          gameRef.current = new Chess(tree.nodes[step.nodeId].fen);
+                          setFen(tree.nodes[step.nodeId].fen);
+                        }}
+                        className={`text-[0.8125rem] font-medium px-2 py-1 rounded-md transition-all whitespace-nowrap ${idx === getFullLineInfo(tree, currentNodeId).length - 1
+                          ? 'text-blue-600 font-bold bg-blue-50'
+                          : 'text-neutral-500 hover:text-neutral-900 hover:bg-neutral-50'
+                          }`}
+                      >
+                        {idx % 2 === 0 ? `${Math.floor(idx / 2) + 1}. ` : ''}{step.san}
+                      </button>
+                      {idx < getFullLineInfo(tree, currentNodeId).length - 1 && (
+                        <ChevronRight size={10} className="text-neutral-300 mx-1 shrink-0" />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <div className="flex items-center gap-2 text-neutral-400">
+                <RotateCcw size={14} className="opacity-20" />
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Posição Inicial</span>
               </div>
-            </>
-          ) : (
-            <div className="flex items-center gap-2 text-neutral-400">
-              <RotateCcw size={14} className="opacity-20" />
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Posição Inicial</span>
-            </div>
-          )}
+            )}
+          </div>
         </div>
-      </div>
 
         {/* 2. Variation Explorer (Continuations) */}
         <div className="card-surface p-5 bg-white border border-neutral-100 shadow-sm min-h-[160px] w-full max-w-[600px] mx-auto">

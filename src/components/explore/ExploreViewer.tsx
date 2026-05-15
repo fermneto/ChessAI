@@ -75,7 +75,7 @@ export default function ExploreViewer({ repertoire, onStateChange }: Props) {
     lookupOpening(gameRef.current.fen()).then(info => {
       const openingStr = info ? `${info.eco}: ${info.name}` : null;
       if (info) setCurrentOpening(openingStr);
-      
+
       if (info) setCurrentOpening(openingStr);
     });
   }, [fen, isMounted, currentNodeId]);
@@ -273,19 +273,19 @@ export default function ExploreViewer({ repertoire, onStateChange }: Props) {
             <button
               onClick={() => setEngineEnabled(!engineEnabled)}
               className={`flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all shadow-sm shrink-0 ${engineEnabled
-                  ? 'bg-blue-600 text-white shadow-blue-500/20'
-                  : 'bg-white text-neutral-500 border border-neutral-200 hover:bg-neutral-50'
+                ? 'bg-blue-600 text-white shadow-blue-500/20'
+                : 'bg-white text-neutral-500 border border-neutral-200 hover:bg-neutral-50'
                 }`}
             >
               <Zap size={12} className={engineEnabled ? 'fill-white' : ''} />
-              {engineEnabled ? 'Motor ON' : 'Analisar'}
+              {engineEnabled ? 'Engine ON' : 'Analisar'}
             </button>
 
             <div className="flex items-center gap-3 min-w-0 overflow-hidden">
               {engineEnabled ? (
                 <div className="flex items-center gap-3 animate-in fade-in slide-in-from-left-2 overflow-hidden">
                   <div className={`px-2 py-1 rounded-lg font-mono font-bold text-xs shadow-inner shrink-0 ${evaluation.startsWith('+') ? 'bg-green-50 text-green-700' :
-                      evaluation.startsWith('-') ? 'bg-red-50 text-red-700' : 'bg-neutral-50 text-neutral-600'
+                    evaluation.startsWith('-') ? 'bg-red-50 text-red-700' : 'bg-neutral-50 text-neutral-600'
                     }`}>
                     {evaluation}
                   </div>
@@ -456,7 +456,7 @@ export default function ExploreViewer({ repertoire, onStateChange }: Props) {
                 <span className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Linha Recomendada</span>
               </div>
               <div className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold ${evaluation.startsWith('+') ? 'bg-green-500/10 text-green-400' :
-                  evaluation.startsWith('-') ? 'bg-red-500/10 text-red-400' : 'bg-blue-500/10 text-blue-400'
+                evaluation.startsWith('-') ? 'bg-red-500/10 text-red-400' : 'bg-blue-500/10 text-blue-400'
                 }`}>
                 {evaluation}
               </div>
