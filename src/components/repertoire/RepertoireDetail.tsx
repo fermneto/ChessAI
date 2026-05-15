@@ -458,6 +458,7 @@ export default function RepertoireDetail({ repertoire: initial }: Props) {
                 repertoireName={repertoire.name}
                 repertoireDescription={repertoire.description ?? undefined}
                 engineEnabled={studyState.engineEnabled}
+                lastMoveSan={studyState.lastMoveSan}
               />
             )}
 

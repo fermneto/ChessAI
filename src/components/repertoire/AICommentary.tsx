@@ -14,6 +14,7 @@ interface Props {
   repertoireName?: string;
   repertoireDescription?: string;
   engineEnabled: boolean;
+  lastMoveSan: string | null;
 }
 
 export default function AICommentary({
@@ -25,7 +26,8 @@ export default function AICommentary({
   turn,
   repertoireName,
   repertoireDescription,
-  engineEnabled
+  engineEnabled,
+  lastMoveSan
 }: Props) {
   const [commentary, setCommentary] = useState<string | null>(null);
   const [historyComments, setHistoryComments] = useState<string[]>([]);
@@ -33,7 +35,7 @@ export default function AICommentary({
   const [error, setError] = useState<string | null>(null);
   const [autoExplain, setAutoExplain] = useState(false);
 
-  const fetchCommentary = async () => {
+  const fetchCommentary = async (forceMoveAnalysis = false) => {
     if (history.length === 0) return;
 
     setLoading(true);
@@ -52,6 +54,8 @@ export default function AICommentary({
           repertoireName,
           repertoireDescription,
           engineEnabled,
+          lastMoveSan,
+          isMoveAnalysis: forceMoveAnalysis,
           previousComments: historyComments.slice(-2) // Envia os últimos 2 comentários para contexto
         }),
       });
@@ -118,14 +122,27 @@ export default function AICommentary({
             Auto: {autoExplain ? 'ON' : 'OFF'}
           </button>
         </div>
-        <button
-          onClick={fetchCommentary}
-          disabled={loading || history.length === 0}
-          className="p-1.5 rounded-lg hover:bg-white/10 text-blue-300 disabled:opacity-20 transition-all"
-          title="Recarregar explicação"
-        >
-          <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
-        </button>
+        <div className="flex items-center gap-1.5">
+          {lastMoveSan && (
+            <button
+              onClick={() => fetchCommentary(true)}
+              disabled={loading}
+              className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-400/20 hover:bg-blue-400/30 text-blue-200 text-[10px] font-bold transition-all border border-blue-400/20 mr-1"
+              title="Analisar este lance específico"
+            >
+              <MessageSquare size={12} />
+              Analisar {lastMoveSan}
+            </button>
+          )}
+          <button
+            onClick={() => fetchCommentary()}
+            disabled={loading || history.length === 0}
+            className="p-1.5 rounded-lg hover:bg-white/10 text-blue-300 disabled:opacity-20 transition-all"
+            title="Recarregar explicação"
+          >
+            <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+          </button>
+        </div>
       </div>
 
       <div className="p-5 h-[290px] relative overflow-y-auto custom-scrollbar">
@@ -164,7 +181,7 @@ export default function AICommentary({
                   : error}
               </p>
               <button
-                onClick={fetchCommentary}
+                onClick={() => fetchCommentary()}
                 className="mt-6 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-xs font-bold transition-all border border-white/10"
               >
                 Tentar agora

@@ -42,6 +42,7 @@ export interface StudyState {
   bestLine: string[];
   turn: 'w' | 'b';
   engineEnabled: boolean;
+  lastMoveSan: string | null;
 }
 
 interface Props {
@@ -152,7 +153,8 @@ export default function StudyBoard({ repertoire, onUpdate, onStateChange }: Prop
         evaluation,
         bestLine,
         turn: gameRef.current.turn() as 'w' | 'b',
-        engineEnabled
+        engineEnabled,
+        lastMoveSan: tree.nodes[currentNodeId]?.parentId ? tree.nodes[currentNodeId].san : null,
       });
     }
   }, [fen, tree, currentNodeId, currentOpening, evaluation, bestLine, engineEnabled, onStateChange, isMounted]);

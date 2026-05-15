@@ -33,6 +33,8 @@ export async function POST(req: Request) {
       repertoireName,
       repertoireDescription,
       engineEnabled,
+      lastMoveSan,
+      isMoveAnalysis,
       previousComments
     } = body;
 
@@ -78,6 +80,10 @@ export async function POST(req: Request) {
       ${previousComments && previousComments.length > 0 ? previousComments.map((c: string, i: number) => `Comentário ${i + 1}: ${c}`).join('\n') : 'Nenhum comentário anterior.'}
 
       INSTRUÇÕES CRÍTICAS:
+      ${isMoveAnalysis && lastMoveSan
+        ? `0. FOQUE EXCLUSIVAMENTE NO ÚLTIMO LANCE: "${lastMoveSan}". Explique se foi um bom lance, um erro ou uma imprecisão baseado na avaliação atual (${evaluation}).`
+        : ''
+      }
       ${engineEnabled
         ? `1. ANALISE PROFUNDAMENTE a "Linha Recomendada" (${bestLine ? bestLine.join(' ') : 'N/A'}). Explique o MOTIVO tático/estratégico desses lances.
            2. Explique o PORQUÊ de a avaliação ser ${evaluation}. Se estiver vantajoso, diga como converter; se estiver pior, diga como lutar.`
@@ -86,8 +92,9 @@ export async function POST(req: Request) {
       }
       3. Seja conciso (máximo 3-4 frases), com retornos claros.
       4. Conecte sua explicação ao objetivo do estudo se possível.
-      5. NÃO se repita em relação aos comentários anteriores.
-      6. Responda em Português do Brasil com um tom profissional e inspirador.
+      5. ${lastMoveSan ? `Mencione o lance "${lastMoveSan}" na sua explicação.` : 'Analise a posição de forma fluida.'}
+      6. NÃO se repita em relação aos comentários anteriores.
+      7. Responda em Português do Brasil com um tom profissional e inspirador.
 
       Responda apenas com o texto do comentário.
     `;
