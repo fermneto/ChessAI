@@ -22,6 +22,7 @@ export interface ExploreStudyState {
   evaluation: string;
   bestLine: string[];
   engineEnabled: boolean;
+  lastMoveSan: string | null;
 }
 
 interface Props {
@@ -99,6 +100,7 @@ export default function ExploreViewer({ repertoire, onStateChange }: Props) {
       evaluation,
       bestLine,
       engineEnabled,
+      lastMoveSan: tree.nodes[currentNodeId]?.parentId ? tree.nodes[currentNodeId].san : null,
     });
   }, [fen, currentNodeId, evaluation, bestLine, engineEnabled, isMounted]);
 

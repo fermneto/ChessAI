@@ -184,6 +184,7 @@ export default function ExploreDetailClient({ repertoire, authorName }: Props) {
                 repertoireName={repertoire.name}
                 repertoireDescription={repertoire.description ?? undefined}
                 engineEnabled={false}
+                lastMoveSan={studyState.lastMoveSan}
               />
             )}
 
