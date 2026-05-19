@@ -483,6 +483,31 @@ body {
   }
 }
 
+/* ===========================
+   Skeleton / Shimmer Loaders
+   =========================== */
+.skeleton {
+  background: linear-gradient(90deg,
+    #f3f4f6 25%,
+    #e9ebee 50%,
+    #f3f4f6 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s infinite linear;
+  border-radius: var(--radius-sm);
+}
+
+.skeleton-dark {
+  background: linear-gradient(90deg,
+    rgba(255, 255, 255, 0.05) 25%,
+    rgba(255, 255, 255, 0.12) 50%,
+    rgba(255, 255, 255, 0.05) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s infinite linear;
+  border-radius: var(--radius-sm);
+}
+
 @keyframes pulse-soft {
 
   0%,
